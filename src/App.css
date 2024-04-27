@@ -110,6 +110,8 @@
     top:0;
     left:0;
     z-index:-4;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
   }
   
   
@@ -132,7 +134,7 @@
     padding:20px;
     width:360px;
     height:390px;
-    background:#9E1D22;
+    background:#1B4B70;
     background-size:cover;
     padding:20px;
     border-radius:20px;
@@ -141,14 +143,14 @@
     box-shadow:1px 1px 10px 0px black;
     
   }
-
+  
   .box-container-2{
     position:relative;
     z-index:11;
     padding:20px;
     width:360px;
     height:390px;
-    background:#1B4B70;
+    background:#9E1D22;
     background-size:cover;
     padding:20px;
     border-radius:20px;
@@ -756,3 +758,67 @@
     }
   }
   
+
+
+
+:root {
+  --line-border-fill: #0091ff;
+  --line-border-empty: #ff070f;
+}
+
+.container {
+  margin-top: 15px;
+  text-align: center;
+  font-family: "Rubik", sans-serif;
+  opacity: 0.25;
+}
+
+.progress-container::before {
+  content: "";
+  background: var(--line-border-empty);
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 4px;
+  width: 100%;
+  z-index: -1;
+}
+
+.progress-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 30px;
+  max-width: 100%;
+  width: 350px;
+}
+
+.progress {
+  background: var(--line-border-fill);
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 4px;
+  width: 0%;
+  z-index: -1;
+  transition: 0.4s ease;
+}
+
+.circle {
+  background: #413f3f;
+  color: #e6e6e6;
+  border-radius: 50%;
+  height: 50px;
+  width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--line-border-empty);
+  transition: .4s ease;
+}
+
+.circle.active {
+  border-color: var(--line-border-fill);
+}
