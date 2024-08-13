@@ -1,0 +1,18 @@
+.input-time {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: all;
+}
+
+.input-field {
+  width: 40vw;
+  height: 6vh;
+  border-radius: 10px;
+  background-color: #00000094;
+  color: #fff;
+  text-align: center;
+}

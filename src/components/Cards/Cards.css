@@ -1,0 +1,154 @@
+.hour-headings {
+  display: block;
+  font-weight: bold;
+  font-family: "Copperplate", "Copperplate Gothic Light", "fantasy";
+}
+
+img {
+  width: 400px;
+  height: 430px;
+  transform: scaleX(-1);
+  pointer-events: all;
+}
+
+.cards-container {
+  position: absolute;
+  width: 100%;
+  height: fit-content;
+  top: 50%;
+  translate: 0 -75%;
+  user-select: none;
+  text-align: left;
+}
+
+.cards-inner-container {
+  width: 82%;
+  height: fit-content;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+}
+/* card css */
+
+h3 {
+  color: #fff;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 40px;
+  margin: 10px 0;
+  text-align: left;
+}
+
+img {
+  width: auto;
+  height: 100%;
+  position: absolute;
+  transition-duration: 500ms;
+  top: 0;
+  left: 0;
+  z-index: -4;
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+.box-container:hover img {
+  opacity: 0;
+  width: 400%;
+  height: 400%;
+}
+
+.box-container-2:hover img {
+  opacity: 0;
+  width: 400%;
+  height: 400%;
+}
+
+.box-container {
+  position: relative;
+  z-index: 11;
+  padding: 20px;
+  width: 360px;
+  height: 390px;
+  background: #1b4b70;
+  background-size: cover;
+  padding: 20px;
+  border-radius: 20px;
+  transition-duration: 500ms;
+  overflow: hidden;
+  box-shadow: 1px 1px 10px 0px black;
+}
+
+.box-container-2 {
+  position: relative;
+  z-index: 11;
+  padding: 20px;
+  width: 360px;
+  height: 390px;
+  background: #9e1d22;
+  background-size: cover;
+  padding: 20px;
+  border-radius: 20px;
+  transition-duration: 500ms;
+  overflow: hidden;
+  box-shadow: 1px 1px 10px 0px black;
+}
+
+.box-container:hover {
+  background-size: 1500px;
+}
+
+.box-container-2:hover {
+  background-size: 1500px;
+}
+
+.box-container .my-time-container {
+  transform: translate(500px, 0px);
+  transition-duration: 700ms;
+  color: #ffff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
+
+.box-container-2 .my-time-container {
+  transform: translate(500px, 0px);
+  transition-duration: 700ms;
+  color: #ffff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
+
+.box-container:hover {
+  scale: 1.05;
+}
+
+.box-container-2:hover {
+  scale: 1.05;
+}
+
+.box-container:hover .my-time-container {
+  transform: translate(0px, 0px);
+}
+
+.box-container-2:hover .my-time-container {
+  transform: translate(0px, 0px);
+}
+
+h6 {
+  display: inline-block;
+  background: #fff;
+  margin: 10px 0px;
+  z-index: 11;
+  font-size: 18px;
+  padding: 10px 30px;
+  transform: translate(0px, 300px);
+  transition-duration: 500ms;
+}
+
+.box-container:hover h6 {
+  transform: translate(0px, 0px);
+}
+
+.box-container-2:hover h6 {
+  transform: translate(0px, 0px);
+}
+/* card css up */
