@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import circleImg from "../../../assets/images/circle.png";
+import { OrbitControls } from "@react-three/drei";
 
 const Flag = () => {
   const imgTex = useLoader(THREE.TextureLoader, circleImg);
@@ -135,35 +136,38 @@ const Flag = () => {
   });
 
   return (
-    <points>
-      <bufferGeometry attach="geometry">
-        <bufferAttribute
-          ref={bufferRef}
-          attach="attributes-position"
-          array={positions}
-          count={positions.length / 3}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          array={colors}
-          count={colors.length / 3}
-          itemSize={3}
-        />
-      </bufferGeometry>
+    <>
+      <OrbitControls></OrbitControls>
+      <points>
+        <bufferGeometry attach="geometry">
+          <bufferAttribute
+            ref={bufferRef}
+            attach="attributes-position"
+            array={positions}
+            count={positions.length / 3}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-color"
+            array={colors}
+            count={colors.length / 3}
+            itemSize={3}
+          />
+        </bufferGeometry>
 
-      <pointsMaterial
-        ref={materialRef}
-        attach="material"
-        map={imgTex}
-        vertexColors={true}
-        size={3}
-        sizeAttenuation
-        transparent={false}
-        alphaTest={0.5}
-        opacity={1.0}
-      />
-    </points>
+        <pointsMaterial
+          ref={materialRef}
+          attach="material"
+          map={imgTex}
+          vertexColors={true}
+          size={3}
+          sizeAttenuation
+          transparent={false}
+          alphaTest={0.5}
+          opacity={1.0}
+        />
+      </points>
+    </>
   );
 };
 
