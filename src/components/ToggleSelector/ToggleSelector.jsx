@@ -18,7 +18,7 @@ const ToggleSelector = ({ onTabChange }) => {
 
   useEffect(() => {
     tabSelectorRef.current.firstChild.classList = ["active-tab"];
-    changeTab(1);
+    changeTab(0);
   }, []);
   return (
     <div className="tab-selector-container" ref={tabSelectorRef}>

@@ -5,6 +5,7 @@ import TimeInput from "../components/TimeInput/TimeInput";
 import CalculateButton from "../components/CalculateButton/CalculateButton";
 import "./KekaTimeManager.css";
 import ToggleSelector from "../components/ToggleSelector/ToggleSelector";
+import { Backgrounds } from "../Background";
 
 const KekaTimeManager = () => {
   const [renderer, setRenderer] = useState(true);
@@ -94,6 +95,16 @@ const KekaTimeManager = () => {
     var completedPercentage =
       (parseFloat(`${currentHour}.${currentMinutes}`) / 9) * 100 + "%";
     r.style.setProperty("--bar-percentage", completedPercentage);
+  };
+
+  const changeBackground = (newTheme) => {
+    const theme = localStorage.getItem("canvasTheme");
+    if (theme != newTheme) {
+      localStorage.setItem("canvasTheme", newTheme);
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
   };
 
   // useEffect(() => {
@@ -191,6 +202,19 @@ const KekaTimeManager = () => {
         </div>
       )}
       <ToggleSelector onTabChange={toggleView} />
+      {!showKekaCalculator && (
+        <div className="background-options">
+          {Object.entries(Backgrounds).map(([key, value]) => (
+            <>
+              {
+                <button key={key} onClick={() => changeBackground(value)}>
+                  <strong>{key}</strong>
+                </button>
+              }
+            </>
+          ))}
+        </div>
+      )}
       {showKekaCalculator && (
         <div className={`${!dataLoaded ? "loader-active" : ""}`}>
           <ProgressBar />

@@ -1,30 +1,48 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import {
+  Environment,
+  OrbitControls,
+  PerspectiveCamera,
+} from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import Text from "../Backgrounds/Text/Text";
+import Text from "../Backgrounds/GdtcLogo/GdtcLogo";
 import Flag from "../Backgrounds/Flag/Flag";
+import RippleEffect from "../Backgrounds/RippleEffect/RippleEffect";
+import { Backgrounds } from "../Background";
+import Reaver from "../Backgrounds/Reaver/Reaver";
+import Car from "../Backgrounds/Car/Car";
 
 const AppCanvas = () => {
-  const [cameraPosition, setCameraPosition] = useState([10, 5, 0]);
-  const [showFlag, setShowFlag] = useState(false);
+  const [theme, setTheme] = useState("");
+  const [bgColor, setBgColor] = useState("rgba(0,11,17,255)");
   useEffect(() => {
-    const theme = localStorage.getItem("canvasTheme");
-    if (theme == "flag") {
-      setCameraPosition([0, 100, -50]);
-      setShowFlag(true);
-    } else {
-      setCameraPosition([50, 25, 0]);
-      setShowFlag(false);
-    }
+    setTheme(localStorage.getItem("canvasTheme"));
   }, []);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Canvas shadows style={{ backgroundColor: "rgba(0,11,17,255)" }}>
+    <Suspense
+      fallback={
+        <div className="hourglassBackground">
+          <div className="hourglassContainer">
+            <div className="hourglassCurves"></div>
+            <div className="hourglassCapTop"></div>
+            <div className="hourglassGlassTop"></div>
+            <div className="hourglassSand"></div>
+            <div className="hourglassSandStream"></div>
+            <div className="hourglassCapBottom"></div>
+            <div className="hourglassGlass"></div>
+          </div>
+        </div>
+      }
+    >
+      <Canvas shadows style={{ backgroundColor: bgColor }}>
         {true && (
           <>
-            {!showFlag && <Text />}
-            {showFlag && <Flag />}
+            {theme === Backgrounds.GDTCLOGO && <Text />}
+            {theme === Backgrounds.FLAG && <Flag />}
+            {theme === Backgrounds.RIPPLE && <RippleEffect />}
+            {theme === Backgrounds.REAVER && <Reaver setBgColor={setBgColor} />}
+            {theme === Backgrounds.CAR && <Car />}
           </>
         )}
       </Canvas>

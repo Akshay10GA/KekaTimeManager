@@ -1,6 +1,27 @@
 button {
   pointer-events: all;
 }
+
+.background-options {
+  top: 15px;
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.background-options button {
+  padding: 10px 25px;
+  border-radius: 25px;
+  color: white;
+  background: transparent;
+  border: 1px solid;
+  cursor: pointer;
+}
+.background-options button:hover {
+  scale: 1.05;
+}
+
 /* Loader */
 .hourglassBackground {
   position: absolute;

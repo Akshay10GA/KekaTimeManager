@@ -2,6 +2,11 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import circleImg from "../../../assets/images/circle.png";
+import {
+  Environment,
+  OrbitControls,
+  PerspectiveCamera,
+} from "@react-three/drei";
 
 const RippleEffect = () => {
   const imgTex = useLoader(THREE.TextureLoader, circleImg);
@@ -80,29 +85,34 @@ const RippleEffect = () => {
   });
 
   return (
-    <points>
-      <bufferGeometry attach="geometry">
-        <bufferAttribute
-          ref={bufferRef}
-          attach="attributes-position"
-          array={positions}
-          count={positions.length / 3}
-          itemSize={3}
-        />
-      </bufferGeometry>
+    <>
+      <PerspectiveCamera position={[50, 15, 0]} makeDefault />
+      <OrbitControls />
+      <Environment preset="sunset" />
+      <points>
+        <bufferGeometry attach="geometry">
+          <bufferAttribute
+            ref={bufferRef}
+            attach="attributes-position"
+            array={positions}
+            count={positions.length / 3}
+            itemSize={3}
+          />
+        </bufferGeometry>
 
-      <pointsMaterial
-        ref={materialRef}
-        attach="material"
-        map={imgTex}
-        color={"rgb(255, 0, 0)"}
-        size={0.5}
-        sizeAttenuation
-        transparent={false}
-        alphaTest={0.5}
-        opacity={1.0}
-      />
-    </points>
+        <pointsMaterial
+          ref={materialRef}
+          attach="material"
+          map={imgTex}
+          color={"rgb(255, 0, 0)"}
+          size={0.5}
+          sizeAttenuation
+          transparent={false}
+          alphaTest={0.5}
+          opacity={1.0}
+        />
+      </points>
+    </>
   );
 };
 

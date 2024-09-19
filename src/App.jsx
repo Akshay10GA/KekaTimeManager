@@ -12,8 +12,8 @@ const App = () => {
       currentDate.getDate().toString() + currentDate.getMonth().toString();
 
     if (arr.includes(value)) {
-      localStorage.setItem("canvasTheme", "flag");
-    } else {
+      localStorage.setItem("canvasTheme", Backgrounds.FLAG);
+    } else if (!localStorage.getItem("canvasTheme")) {
       localStorage.setItem("canvasTheme", Backgrounds.RIPPLE);
     }
   }, []);
