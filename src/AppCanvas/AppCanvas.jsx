@@ -11,6 +11,8 @@ import RippleEffect from "../Backgrounds/RippleEffect/RippleEffect";
 import { Backgrounds } from "../Background";
 import Reaver from "../Backgrounds/Reaver/Reaver";
 import Car from "../Backgrounds/Car/Car";
+import Planets_and_satellites from "../Backgrounds/PlanetsAndSatellites/Planets_and_satellites";
+import BlackHole from "../Backgrounds/BlackHole/BlackHole";
 
 const AppCanvas = () => {
   const [theme, setTheme] = useState("");
@@ -43,6 +45,8 @@ const AppCanvas = () => {
             {theme === Backgrounds.RIPPLE && <RippleEffect />}
             {theme === Backgrounds.REAVER && <Reaver setBgColor={setBgColor} />}
             {theme === Backgrounds.CAR && <Car />}
+            {theme === Backgrounds.EARTH && <Planets_and_satellites />}
+            {/* {theme === Backgrounds.BlackHole && <BlackHole />} */}
           </>
         )}
       </Canvas>

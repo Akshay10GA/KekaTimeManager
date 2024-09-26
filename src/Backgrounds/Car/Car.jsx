@@ -7,7 +7,7 @@ Source: https://sketchfab.com/3d-models/lotus-elise-75e9045ac1af4cdbb69318108c81
 Title: LOTUS ÉLISE
 */
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useGLTF,
   useAnimations,
@@ -15,18 +15,42 @@ import {
   OrbitControls,
   PerspectiveCamera,
 } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 
 export default function Car(props) {
+  const cameraRef = useRef();
+  const girlRef = useRef();
   const group = useRef();
   const { nodes, materials, animations } = useGLTF("/car/car.gltf");
   const { actions, names } = useAnimations(animations, group);
+  const [cameraPosition, setCameraPosition] = useState([20, 8, -40]);
 
   useEffect(() => {
     actions[names[0]].reset().fadeIn(0.5).play();
+    console.log(actions[names[0]]);
+    // const interval = setInterval(() => {
+    //   setCameraPosition((prev) => {
+    //     const newPos = [...girlRef.current.position];
+    //     newPos[0] += 10; // Move the camera along the x-axis
+    //     return newPos;
+    //   });
+    // }, 1000); // Update every second
+
+    // return () => clearInterval(interval);
   }, []);
+  // useFrame(() => {
+  //   var position = [20, 8, -40];
+  //   setCameraPosition(position);
+  //   console.log(cameraRef);
+  // });
   return (
     <>
-      <PerspectiveCamera position={[20, 8, -40]} makeDefault />
+      <PerspectiveCamera
+        ref={cameraRef}
+        position={cameraPosition}
+        target={[13, 0, 0]}
+        makeDefault
+      />
       <OrbitControls target={[13, 0, 0]} />
       <Environment preset="sunset" />
       <group ref={group} {...props} dispose={null}>

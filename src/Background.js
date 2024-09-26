@@ -4,4 +4,6 @@ export const Backgrounds = Object.freeze({
   GDTCLOGO: "gdtclogo",
   REAVER: "reaver",
   CAR: "car",
+  EARTH: "earth",
+  // BlackHole: "blackhole",
 });
