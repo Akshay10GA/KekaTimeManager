@@ -7,7 +7,7 @@ Source: https://sketchfab.com/3d-models/of-planes-and-satellites-db8f1c8cba3b464
 Title: Of Planes and Satellites
 */
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Environment,
   OrbitControls,
@@ -15,11 +15,16 @@ import {
   Stars,
   useGLTF,
 } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 
 export default function Planets_and_satellites(props) {
+  const groupRef = useRef();
   const { nodes, materials } = useGLTF(
     "/of_planes_and_satellites/planets_and_satellites.gltf"
   );
+  useFrame(() => {
+    groupRef.current.rotation.y = groupRef.current.rotation.y - Math.PI / 720;
+  });
   return (
     <>
       {/* <ambientLight /> */}
@@ -37,7 +42,7 @@ export default function Planets_and_satellites(props) {
         enablePan={false}
       />
       <Environment preset="studio" />
-      <group {...props} dispose={null} scale={50}>
+      <group {...props} dispose={null} scale={50} ref={groupRef}>
         <group rotation={[-Math.PI / 2, 0, 0]} scale={0.038}>
           <group rotation={[Math.PI / 2, 0, 0]}>
             <lineSegments
