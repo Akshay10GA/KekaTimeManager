@@ -57,7 +57,7 @@ const KekaTimeManager = () => {
     let inputValueFormatted = inputValue
       .replaceAll("AM ", "AM,")
       .replaceAll("PM ", "PM,");
-    fetch("https://kekatimecalculation.onrender.com/calculatetime", {
+    fetch("https://kekatimecalculation-i84m.onrender.com/calculatetime", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
