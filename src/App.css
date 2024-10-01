@@ -26,3 +26,17 @@
   --line-border-empty: #ff070f;
   --bar-percentage: 0%;
 }
+
+.view-change-button {
+  position: absolute;
+  height: fit-content;
+  bottom: 50px;
+  left: 50px;
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid white;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  pointer-events: all;
+}

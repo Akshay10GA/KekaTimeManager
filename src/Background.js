@@ -1,9 +1,9 @@
 export const Backgrounds = Object.freeze({
-  RIPPLE: "ripple",
-  FLAG: "flag",
+  Ripple: "ripple",
+  Flag: "flag",
   GDTCLOGO: "gdtclogo",
-  REAVER: "reaver",
-  CAR: "car",
-  EARTH: "earth",
-  // BlackHole: "blackhole",
+  Car: "car",
+  Earth: "earth",
+  BlackHole: "blackhole",
+  Gandhi: "gandhi",
 });
