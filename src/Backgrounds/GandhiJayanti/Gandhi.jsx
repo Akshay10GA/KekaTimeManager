@@ -21,7 +21,7 @@ export default function Gandhi(props) {
       ? "The Big Day"
       : value - 29 === -10
       ? "1 day to go"
-      : "Too Late !";
+      : "Ghar Jao Beta !";
   const { nodes, materials } = useGLTF("/gandhi/gandhi.gltf");
   const material = new THREE.MeshBasicMaterial({ color: "#F5F5DC" });
 
@@ -30,7 +30,7 @@ export default function Gandhi(props) {
       <Text3D
         position={[-2.7, 4.5, 0]}
         font="/helvetiker_regular.typeface.json"
-        size={0.75}
+        size={0.60}
         height={0.01}
         curveSegments={12}
         bevelEnabled
@@ -114,7 +114,7 @@ export default function Gandhi(props) {
         bevelSize={0.02}
         material={material}
       >
-        Gandhi Jayanti
+        Kitna Kaam Karoge
       </Text3D>
     </>
   );
