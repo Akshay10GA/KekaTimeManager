@@ -16,12 +16,13 @@ export default function Gandhi(props) {
   const value = parseInt(
     currentDate.getDate().toString() + currentDate.getMonth().toString()
   );
+  console.log(currentDate.getHours())
   let message =
     value - 29 === 0
       ? "The Big Day"
       : value - 29 === -10
       ? "1 day to go"
-      : "Ghar Jao Beta !";
+      : (currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? "Ghar Jao Beta !" : "Sabar Karo beta !";
   const { nodes, materials } = useGLTF("/gandhi/gandhi.gltf");
   const material = new THREE.MeshBasicMaterial({ color: "#F5F5DC" });
 
@@ -30,7 +31,7 @@ export default function Gandhi(props) {
       <Text3D
         position={[-2.7, 4.5, 0]}
         font="/helvetiker_regular.typeface.json"
-        size={0.60}
+        size={0.55}
         height={0.01}
         curveSegments={12}
         bevelEnabled
@@ -114,7 +115,7 @@ export default function Gandhi(props) {
         bevelSize={0.02}
         material={material}
       >
-        Kitna Kaam Karoge
+        {(currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? 'Kitna Kaam Karoge' : 'Abhi Time hai'}
       </Text3D>
     </>
   );
