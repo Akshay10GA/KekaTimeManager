@@ -1,13 +1,12 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import Text from "../Backgrounds/GdtcLogo/GdtcLogo";
+import GdtcLogo from "../Backgrounds/GdtcLogo/GdtcLogo";
 import Flag from "../Backgrounds/Flag/Flag";
 import RippleEffect from "../Backgrounds/RippleEffect/RippleEffect";
 import { Backgrounds } from "../Background";
 import Car from "../Backgrounds/Car/Car";
 import Planets_and_satellites from "../Backgrounds/PlanetsAndSatellites/Planets_and_satellites";
-import BlackHole from "../Backgrounds/BlackHole/BlackHole";
-import GandhiJayanti from "../Backgrounds/GandhiJayanti/GandhiJayanti";
+import Santa from "../Backgrounds/Santa/Santa_dance";
 
 const AppCanvas = () => {
   const [theme, setTheme] = useState("");
@@ -16,12 +15,8 @@ const AppCanvas = () => {
 
   useEffect(() => {
     setTheme(localStorage.getItem("canvasTheme"));
-  }, []);
-
-  const handleChange = () => {
-    console.log("hii");
-    setHide(!hide);
-  };
+    console.log(localStorage.getItem("canvasTheme"));
+  });
 
   return (
     <>
@@ -43,22 +38,16 @@ const AppCanvas = () => {
         <Canvas shadows style={{ backgroundColor: bgColor }}>
           {true && (
             <>
-              {theme === Backgrounds.GDTCLOGO && <Text />}
-              {theme === Backgrounds.Flag && <Flag />}
               {theme === Backgrounds.Ripple && <RippleEffect />}
+              {theme === Backgrounds.Flag && <Flag />}
               {theme === Backgrounds.Car && <Car />}
               {theme === Backgrounds.Earth && <Planets_and_satellites />}
-              {theme === Backgrounds.BlackHole && <BlackHole />}
-              {theme === Backgrounds.Gandhi && <GandhiJayanti hide={hide} />}
+              {theme === Backgrounds.GDTCLOGO && <GdtcLogo />}
+              {theme === Backgrounds.Santa && <Santa />}
             </>
           )}
         </Canvas>
       </Suspense>
-      {theme === Backgrounds.Gandhi && (
-        <button className="view-change-button" onClick={handleChange}>
-          Change View
-        </button>
-      )}
     </>
   );
 };

@@ -32,8 +32,14 @@ const KekaTimeManager = () => {
   const toggleView = (view) => {
     if (view.toLowerCase() == "canvas") {
       setShowKekaCalculator(false);
-    } else {
+      localStorage.setItem("view", true);
+    } else if (view.toLowerCase() == "all") {
       setShowKekaCalculator(true);
+      localStorage.setItem("view", false);
+    } else if (view.toLowerCase() == "default") {
+      localStorage.setItem("useDefault", true);
+    } else if (view.toLowerCase() == "select") {
+      localStorage.setItem("useDefault", false);
     }
   };
 
@@ -201,7 +207,23 @@ const KekaTimeManager = () => {
           </div>
         </div>
       )}
-      <ToggleSelector onTabChange={toggleView} />
+      <ToggleSelector
+        key={"default-editor"}
+        onTabChange={toggleView}
+        tabs={["Default", "Select"]}
+        right={"0px"}
+        selectedTab={
+          JSON.parse(localStorage.getItem("useDefault")) ? "default" : "select"
+        }
+      />
+      <ToggleSelector
+        key={"view-editor"}
+        onTabChange={toggleView}
+        tabs={["All", "Canvas"]}
+        selectedTab={
+          JSON.parse(localStorage.getItem("view")) ? "canvas" : "all"
+        }
+      />
       {!showKekaCalculator && (
         <div className="background-options">
           {Object.entries(Backgrounds).map(([key, value]) => (
