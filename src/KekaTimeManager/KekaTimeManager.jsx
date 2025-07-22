@@ -21,14 +21,15 @@ const KekaTimeManager = () => {
   const [runningHour, setRunningHour] = useState(0);
   const [runningMinutes, setRunningMinutes] = useState(0);
   const [runningSeconds, setRunningSeconds] = useState(0);
-  const [totalBreak, setTotalBreak] = useState(0);
-  const [lunchBreak, setLunchBreak] = useState(0);
-  const [otherBreak, setOtherBreak] = useState(0);
+  const [totalBreak, setTotalBreak] = useState("00:00:00");
+  const [lunchBreak, setLunchBreak] = useState("00:00:00");
+  const [otherBreak, setOtherBreak] = useState("00:00:00");
   const [estimateFinishTime, setEstimateFinishTime] = useState("");
   const [estFinishHourNow, setEstFinishHourNow] = useState("");
   let clockTime = new Date();
 
   const [showKekaCalculator, setShowKekaCalculator] = useState(true);
+
   const toggleView = (view) => {
     if (view.toLowerCase() == "canvas") {
       setShowKekaCalculator(false);
@@ -53,47 +54,160 @@ const KekaTimeManager = () => {
     }
   };
 
+  const calculateTimes = (shiftTimesStr) => {
+    const breakTime = {
+      total_break_time: 0,
+      lunch_break: 0,
+      other_break: 0
+    };
+
+    const reverseListWithCurrentTime = (timeList) => {
+      const newTimeList = [];
+      const now = new Date();
+      const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      for (const timeStr of timeList) {
+        if (timeStr === "MISSING") {
+          const currentTime = new Date();
+          currentTime.setHours(currentTime.getHours());
+          currentTime.setMinutes(currentTime.getMinutes());
+          newTimeList.push(currentTime);
+        } else {
+          const [time, period] = timeStr.split(' ');
+          const [hours, minutes, seconds] = time.split(':').map(Number);
+          
+          let hour = hours;
+          if (period === 'PM' && hours !== 12) hour += 12;
+          if (period === 'AM' && hours === 12) hour = 0;
+          
+          const dateTime = new Date(currentDate);
+          dateTime.setHours(hour, minutes, seconds);
+          newTimeList.push(dateTime);
+        }
+      }
+      return newTimeList;
+    };
+
+    const calculateTotalHours = (reversedList) => {
+      let totalHours = 0; // in milliseconds
+      const list = [...reversedList];
+      
+      while (list.length >= 2) {
+        const diff = list[1] - list[0];
+        totalHours += diff;
+        list.shift();
+        list.shift();
+      }
+      
+      return totalHours;
+    };
+
+    const calculateBreakTime = (reversedList) => {
+      const list = [...reversedList];
+      if (list.length < 4) return breakTime;
+      
+      list.shift();
+      list.pop();
+      
+      const tempList = [];
+      let totalBreakHours = 0;
+      
+      while (list.length >= 2) {
+        const diff = list[1] - list[0];
+        totalBreakHours += diff;
+        tempList.push(diff);
+        list.shift();
+        list.shift();
+      }
+      
+      if (tempList.length > 0) {
+        const maxBreak = Math.max(...tempList);
+        breakTime.total_break_time = totalBreakHours;
+        breakTime.lunch_break = maxBreak;
+        breakTime.other_break = totalBreakHours - maxBreak;
+      }
+      
+      return breakTime;
+    };
+
+    const formatTime = (ms) => {
+      if (!ms) return "00:00:00";
+      const seconds = Math.floor(ms / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const shiftTimes = shiftTimesStr.split(',');
+    const break_time_applicable = shiftTimes.length >= 4;
+    const shift_ended = shiftTimes[shiftTimes.length - 1] !== "MISSING";
+    
+    const reversedList = reverseListWithCurrentTime(shiftTimes);
+    const copyReversedList = [...reversedList];
+    
+    const breakTimeData = calculateBreakTime(copyReversedList);
+    const totalShiftMs = calculateTotalHours(reversedList);
+    
+    // Convert milliseconds to hours, minutes
+    const totalHours = Math.floor(totalShiftMs / (1000 * 60 * 60));
+    const totalMinutes = Math.floor((totalShiftMs / (1000 * 60)) % 60);
+    const totalSeconds = Math.floor((totalShiftMs / 1000) % 60);
+
+    return {
+      totalHours,
+      totalMinutes,
+      totalSeconds,
+      totalBreak: formatTime(breakTimeData.total_break_time),
+      lunchBreak: formatTime(breakTimeData.lunch_break),
+      otherBreak: formatTime(breakTimeData.other_break),
+      breakTimeApplicable: break_time_applicable,
+      shiftEnded: shift_ended
+    };
+  };
+
   const handleSubmit = () => {
     setCurrentHour(0);
     setCurrentMinutes(0);
     setCurrentSeconds(0);
     setEstimateFinishTime("");
     setDataLoaded(false);
+    
     inputValue = inputValue.trim();
     let inputValueFormatted = inputValue
       .replaceAll("AM ", "AM,")
       .replaceAll("PM ", "PM,");
-    fetch("https://kekatimecalculation-i84m.onrender.com/calculatetime", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ time: inputValueFormatted }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setDataLoaded(true);
-        const timenow = data.response.split(",");
-        setResponseData(timenow);
-        setCurrentHour(parseInt(timenow[0], 10));
-        setCurrentMinutes(parseInt(timenow[1].trim(), 10));
-        setCurrentSeconds(parseInt(timenow[2].trim(), 10));
-        setTotalBreak(timenow[3]);
-        setLunchBreak(timenow[4]);
-        setOtherBreak(timenow[5]);
-        timenow[6].includes("False")
-          ? setBreakTimeApplicable(false)
-          : setBreakTimeApplicable(true);
-        timenow[7].includes("False")
-          ? setShiftEnded(false)
-          : setShiftEnded(true);
-        setShowInfo(true);
-      })
-      .catch((error) => {
-        setDataLoaded(true);
-        setBreakTimeApplicable(false);
-        console.error("Error:", error);
-      });
+    
+    try {
+      const result = calculateTimes(inputValueFormatted);
+      
+      setDataLoaded(true);
+      setCurrentHour(result.totalHours);
+      setCurrentMinutes(result.totalMinutes);
+      setCurrentSeconds(result.totalSeconds);
+      setTotalBreak(result.totalBreak);
+      setLunchBreak(result.lunchBreak);
+      setOtherBreak(result.otherBreak);
+      setBreakTimeApplicable(result.breakTimeApplicable);
+      setShiftEnded(result.shiftEnded);
+      setShowInfo(true);
+      
+      // Set responseData in the format expected by your Cards component
+      setResponseData([
+        result.totalHours,
+        result.totalMinutes,
+        result.totalSeconds,
+        result.totalBreak,
+        result.lunchBreak,
+        result.otherBreak,
+        result.breakTimeApplicable ? "True" : "False",
+        result.shiftEnded ? "True" : "False"
+      ]);
+    } catch (error) {
+      setDataLoaded(true);
+      setBreakTimeApplicable(false);
+      console.error("Error:", error);
+    }
   };
 
   const updateProgressBar = () => {
@@ -113,10 +227,6 @@ const KekaTimeManager = () => {
     }
   };
 
-  // useEffect(() => {
-  //   updateProgressBar()
-  // })
-
   useEffect(() => {
     document.addEventListener("keydown", handleEnterPress);
     if (estimateFinishTime == "" && (currentHour > 0 || currentMinutes > 0)) {
@@ -130,12 +240,6 @@ const KekaTimeManager = () => {
       estFinishMinute = 60 - currentMinutes + clockTime.getMinutes();
       estFinishMinute > 60 ? (estFinishHour = estFinishHour + 1) : "";
       estFinishMinute > 60 ? (estFinishMinute = estFinishMinute - 60) : "";
-      console.log(estFinishHour, "estFinishHour");
-      console.log(estFinishMinute, "estFinishMinute");
-      console.log(currentHour, "currentHour");
-      console.log(currentMinutes, "currentMinutes");
-      console.log(clockTime.getHours(), "clockTime.getHours()");
-      console.log(clockTime.getMinutes(), "clockTime.getMinutes()");
       currentHour >= 9
         ? setEstFinishHourNow(`9 Hr Completed`)
         : setEstFinishHourNow(`${estFinishHour} : ${estFinishMinute}`);
@@ -191,6 +295,7 @@ const KekaTimeManager = () => {
   useEffect(() => {
     setRenderer(!renderer);
   }, [showKekaCalculator]);
+
   return (
     <>
       {/* loader */}
