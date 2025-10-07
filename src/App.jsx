@@ -1,10 +1,26 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import KekaTimeManager from "./KekaTimeManager/KekaTimeManager";
 import AppCanvas from "./AppCanvas/AppCanvas";
 import { Backgrounds } from "./Background.js";
 
 const App = () => {
+  const [refresh, setRefresh] = useState(true);
+  const [showKekaCalculator, setShowKekaCalculator] = useState(JSON.parse(localStorage.getItem("view")) ?? true);
+
+  const handleKeyDown = (e) => {
+    if (e.ctrlKey && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        setShowKekaCalculator((prev)=>!prev);
+    }
+  }
+
+  const handleKeyUp = (event) => {
+    if (event.key === "Escape") {
+      setShowKekaCalculator((prev)=>!prev);
+    }
+  };
+
   useEffect(() => {
     let useDefault = localStorage.getItem("useDefault");
     const currentDate = new Date();
@@ -51,12 +67,20 @@ const App = () => {
     if (!localStorage.getItem("useDefault")) {
       localStorage.setItem("useDefault", "true");
     }
+
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keyup", handleKeyUp);
+      window.addEventListener("keydown", handleKeyDown);
+    };
   }, []);
+
   return (
     <>
-      <AppCanvas />
+      <AppCanvas refresh={refresh} />
       <div className="app">
-        <KekaTimeManager />
+        <KekaTimeManager refresh={refresh} setRefresh={setRefresh} showKekaCalculator={showKekaCalculator} setShowKekaCalculator={setShowKekaCalculator}/>
       </div>
     </>
   );

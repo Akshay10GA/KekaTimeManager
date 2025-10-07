@@ -7,8 +7,9 @@ import { Backgrounds } from "../Background";
 import Car from "../Backgrounds/Car/Car";
 import Planets_and_satellites from "../Backgrounds/PlanetsAndSatellites/Planets_and_satellites";
 import Santa from "../Backgrounds/Santa/Santa_dance";
+import GandhiJayanti from "../Backgrounds/GandhiJayanti/GandhiJayanti";
 
-const AppCanvas = () => {
+const AppCanvas = ({refresh}) => {
   const [theme, setTheme] = useState("");
   const [bgColor, setBgColor] = useState("rgba(0,11,17,255)");
   const [hide, setHide] = useState(false);
@@ -16,7 +17,7 @@ const AppCanvas = () => {
   useEffect(() => {
     setTheme(localStorage.getItem("canvasTheme"));
     console.log(localStorage.getItem("canvasTheme"));
-  });
+  },[refresh]);
 
   return (
     <>
@@ -44,6 +45,7 @@ const AppCanvas = () => {
               {theme === Backgrounds.Earth && <Planets_and_satellites />}
               {theme === Backgrounds.GDTCLOGO && <GdtcLogo />}
               {theme === Backgrounds.Santa && <Santa />}
+              {theme === Backgrounds.Gandhi && <GandhiJayanti />}
             </>
           )}
         </Canvas>

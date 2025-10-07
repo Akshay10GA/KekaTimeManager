@@ -7,7 +7,7 @@ import "./KekaTimeManager.css";
 import ToggleSelector from "../components/ToggleSelector/ToggleSelector";
 import { Backgrounds } from "../Background";
 
-const KekaTimeManager = () => {
+const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCalculator}) => {
   const [renderer, setRenderer] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
@@ -28,8 +28,6 @@ const KekaTimeManager = () => {
   const [estFinishHourNow, setEstFinishHourNow] = useState("");
   let clockTime = new Date();
 
-  const [showKekaCalculator, setShowKekaCalculator] = useState(true);
-
   const toggleView = (view) => {
     if (view.toLowerCase() == "canvas") {
       setShowKekaCalculator(false);
@@ -43,6 +41,10 @@ const KekaTimeManager = () => {
       localStorage.setItem("useDefault", false);
     }
   };
+
+  useEffect(() => {
+      localStorage.setItem("view", showKekaCalculator);
+  },[showKekaCalculator]);
 
   const handleChange = (event) => {
     setInputValue(event.target.value);
@@ -221,9 +223,7 @@ const KekaTimeManager = () => {
     const theme = localStorage.getItem("canvasTheme");
     if (theme != newTheme) {
       localStorage.setItem("canvasTheme", newTheme);
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      setRefresh(refresh => !refresh);
     }
   };
 
@@ -326,7 +326,7 @@ const KekaTimeManager = () => {
         onTabChange={toggleView}
         tabs={["All", "Canvas"]}
         selectedTab={
-          JSON.parse(localStorage.getItem("view")) ? "canvas" : "all"
+          showKekaCalculator ? "all" : "canvas"
         }
       />
       {!showKekaCalculator && (

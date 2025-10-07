@@ -12,11 +12,18 @@ const ToggleSelector = ({
 }) => {
   const tabSelectorRef = useRef();
 
-  const changeTab = (index) => {
+  useEffect(()=>{
+    changeTab(Array.from(tabSelectorRef.current.children).findIndex((element)=>element.innerText.toLowerCase()===selectedTab), false);
+  }, [selectedTab])
+
+  const changeTab = (index, apply) => {
     for (let i = 0; i < tabs.length; i++) {
       if (i === index) {
         tabSelectorRef.current.children[i].classList = ["active-tab"];
-        onTabChange(tabSelectorRef.current.children[i].textContent);
+        if (apply){
+          onTabChange(tabSelectorRef.current.children[i].textContent);
+        }
+
       } else {
         tabSelectorRef.current.children[i].classList = [""];
       }
@@ -28,11 +35,11 @@ const ToggleSelector = ({
       if (selectedTab) {
         if (element.innerText.toLowerCase() === selectedTab) {
           tabSelectorRef.current.children[index].classList = ["active-tab"];
-          changeTab(index);
+          changeTab(index, true);
         }
       } else {
         tabSelectorRef.current.firstChild.classList = ["active-tab"];
-        changeTab(0);
+        changeTab(0, true);
       }
     });
   }, []);
@@ -43,7 +50,7 @@ const ToggleSelector = ({
       style={{ top: top, right: right, left: left, bottom: bottom }}
     >
       {tabs.map((name, index) => (
-        <div key={name} onClick={() => changeTab(index)}>
+        <div key={name} onClick={() => changeTab(index, true)}>
           {name}
         </div>
       ))}
