@@ -293,7 +293,7 @@ export default function App() {
 
           <div className="calulcate-button">
             <button className="actual-calulcate-button" onClick={handleSubmit}>
-              Calculate
+              Calculate Time
             </button>
             {/* Add the new Scrape button */}
             <button className="actual-calulcate-button" onClick={handleScrape}>
