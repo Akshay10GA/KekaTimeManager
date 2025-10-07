@@ -23,6 +23,20 @@ export default function App() {
   const [estFinishHourNow, setEstFinishHourNow] = useState("");
   let clockTime = new Date();
 
+  const handleScrape = () => {
+    // This function will trigger the Chrome extension
+    if (window.chrome && window.chrome.runtime) {
+      // Send a message to the Chrome extension
+      window.chrome.runtime.sendMessage("YOUR_EXTENSION_ID", { action: "scrape" }, (response) => {
+        if (response && response.time) {
+          setInputValue(response.time);
+        }
+      });
+    } else {
+      alert("Chrome extension not found.");
+    }
+  };
+
   const handleChange = (event) => {
     setInputValue(event.target.value);
   };
@@ -280,6 +294,10 @@ export default function App() {
           <div className="calulcate-button">
             <button className="actual-calulcate-button" onClick={handleSubmit}>
               Calculate
+            </button>
+            {/* Add the new Scrape button */}
+            <button className="actual-calulcate-button" onClick={handleScrape}>
+              Scrape
             </button>
           </div>
         </div>

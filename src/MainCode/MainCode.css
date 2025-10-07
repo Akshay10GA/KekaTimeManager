@@ -19,6 +19,12 @@
   display: block;
 }
 
+.calulcate-button {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Add some space between the buttons */
+}
+
 .input-time {
   display: flex;
   justify-content: center;
