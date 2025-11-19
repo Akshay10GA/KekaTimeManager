@@ -227,7 +227,7 @@ export default function Quiz({ quizData }: { quizData: QuizData }) {
       <div className="quiz-container">
         <div className="quiz-card">
           <div className="mb-6">
-            <h1 className="quiz-title">🎮 Quiz Master</h1>
+            <h1 className="quiz-title">Brainrot Master</h1>
             <p className="quiz-subtitle">Test your knowledge and beat the high score!</p>
           </div>
 
@@ -235,7 +235,7 @@ export default function Quiz({ quizData }: { quizData: QuizData }) {
             <div className="highscore-banner">
               <div className="highscore-content">
                 <div>
-                  <p className="highscore-label">🏆 Current Champion</p>
+                  <p className="highscore-label">Current Braindead Champion</p>
                   <p className="text-gray-900">{highScore.username}</p>
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export default function Quiz({ quizData }: { quizData: QuizData }) {
           </button>
 
           <div className="warning-box">
-            <p className="warning-text">⚠️ One wrong answer and you're out!</p>
+            <p className="warning-text">⚠️ One wrong answer and you're nomral again!</p>
           </div>
         </div>
       </div>
@@ -288,7 +288,7 @@ export default function Quiz({ quizData }: { quizData: QuizData }) {
             {isNewHighScore ? (
               <>
                 <div className="gameover-icon">🏆</div>
-                <h2 className="gameover-title-champion">New Champion!</h2>
+                <h2 className="gameover-title-champion">New Braindead Champion!</h2>
                 <p className="text-gray-600">Congratulations {username}, you set a new high score!</p>
               </>
             ) : didWin ? (
