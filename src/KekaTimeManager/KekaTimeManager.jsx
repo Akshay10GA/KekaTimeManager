@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ProgressBar from "../components/ProgressBar/ProgressBar";
 import Cards from "../components/Cards/Cards";
 import TimeInput from "../components/TimeInput/TimeInput";
@@ -6,6 +6,8 @@ import CalculateButton from "../components/CalculateButton/CalculateButton";
 import "./KekaTimeManager.css";
 import ToggleSelector from "../components/ToggleSelector/ToggleSelector";
 import { Backgrounds } from "../Background";
+import { quizData } from "../components/Quiz/Questions";
+import Quiz from "../components/Quiz/Quiz";
 
 const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCalculator}) => {
   const [renderer, setRenderer] = useState(true);
@@ -13,6 +15,7 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
   const [showInfo, setShowInfo] = useState(false);
   const [breakTimeApplicable, setBreakTimeApplicable] = useState(true);
   const [shiftEnded, setShiftEnded] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
   let [inputValue, setInputValue] = useState("");
   const [responseData, setResponseData] = useState(null);
   const [currentHour, setCurrentHour] = useState(0);
@@ -329,6 +332,30 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
           showKekaCalculator ? "all" : "canvas"
         }
       />
+      {showKekaCalculator && (
+        <button
+          onClick={() => setShowQuiz(!showQuiz)}
+          className="quiz-toggle-button"
+          style={{
+          position: 'absolute',
+          top: '6px',
+          left: '21ox',
+          transform: 'translateX(-550%)',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          border: '2px solid white',
+          background: 'rgba(255, 255, 255, 0.1)',
+          color: 'white',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          zIndex: 1000,
+          backdropFilter: 'blur(10px)',
+          }}
+        >
+          {showQuiz ? '📊 Show Calculator' : '🎮 Show Quiz'}
+        </button>
+      )}
       {!showKekaCalculator && (
         <div className="background-options">
           {Object.entries(Backgrounds).map(([key, value]) => (
@@ -344,7 +371,7 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
       )}
       {showKekaCalculator && (
         <div className={`${!dataLoaded ? "loader-active" : ""}`}>
-          <ProgressBar />
+          <ProgressBar /> <br /> <br /> <br />
           <Cards
             showInfo={showInfo}
             shiftEnded={shiftEnded}
@@ -359,8 +386,14 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
             otherBreak={otherBreak}
             clockTime={clockTime}
           />
-          <TimeInput onInputChange={handleChange} />
-          <CalculateButton onCalculate={handleSubmit} />
+          {showQuiz ? (
+            <Quiz quizData={quizData}/>
+          ) : (
+            <>
+              <TimeInput onInputChange={handleChange} />
+              <CalculateButton onCalculate={handleSubmit} />
+            </>
+          )}
         </div>
       )}
     </>
