@@ -1,6 +1,6 @@
 import Quiz from "./Quiz";
 
-const quizData = {
+const quizData = { 
   questions: [
   {
     "question": "Rahul Gandhi ne bola 'Aaloo ke machine se sona nikalega', machine ka kya reaction hoga?",
