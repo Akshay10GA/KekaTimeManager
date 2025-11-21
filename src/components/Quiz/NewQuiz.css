@@ -324,7 +324,7 @@ h3 {
 
 .btn-secondary:hover {
   border-color: var(--neon-blue);
-  color: var(--neon-blue);
+  color: black;
   box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
 }
 
