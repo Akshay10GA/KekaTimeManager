@@ -6,6 +6,7 @@
   display: flex;
   justify-content: center;
   pointer-events: all;
+  width: 50% !important;
 }
 
 .input-field {
@@ -13,6 +14,6 @@
   height: 6vh;
   border-radius: 10px;
   background-color: #000000;
-  color: #fff;
+  color: aqua !important;
   text-align: center;
 }

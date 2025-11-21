@@ -216,8 +216,9 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
 
   const updateProgressBar = () => {
     var r = document.querySelector(":root");
-    var completedPercentage =
-      (parseFloat(`${currentHour}.${currentMinutes}`) / 9) * 100 + "%";
+    // Convert hours and minutes to decimal hours (e.g., 8h 45m = 8.75)
+    const totalHoursDecimal = currentHour + (currentMinutes / 60);
+    var completedPercentage = (totalHoursDecimal / 9) * 100 + "%";
     r.style.setProperty("--bar-percentage", completedPercentage);
   };
 
@@ -231,21 +232,30 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
 
   useEffect(() => {
     document.addEventListener("keydown", handleEnterPress);
-    if (estimateFinishTime == "" && (currentHour > 0 || currentMinutes > 0)) {
-      let estFinishHour = 0;
-      let estFinishMinute = 0;
-      let runningClockTime =
-        clockTime.getHours() > 12
-          ? clockTime.getHours() - 12
-          : clockTime.getHours();
-      estFinishHour = 8 - currentHour + runningClockTime;
-      estFinishMinute = 60 - currentMinutes + clockTime.getMinutes();
-      estFinishMinute > 60 ? (estFinishHour = estFinishHour + 1) : "";
-      estFinishMinute > 60 ? (estFinishMinute = estFinishMinute - 60) : "";
-      currentHour >= 9
-        ? setEstFinishHourNow(`9 Hr Completed`)
-        : setEstFinishHourNow(`${estFinishHour} : ${estFinishMinute}`);
-      setEstimateFinishTime(`${estFinishHour} : ${estFinishMinute}`);
+    if (estimateFinishTime == "" && (currentHour > 0 || currentMinutes > 0) && !shiftEnded) {
+      // Calculate remaining time to reach 9 hours
+      const remainingMinutes = (9 * 60) - (currentHour * 60 + currentMinutes);
+      
+      if (remainingMinutes > 0) {
+        // Add remaining minutes to current time
+        const finishTime = new Date();
+        finishTime.setMinutes(finishTime.getMinutes() + remainingMinutes);
+        
+        let estFinishHour = finishTime.getHours();
+        if (estFinishHour > 12) estFinishHour -= 12;
+        if (estFinishHour === 0) estFinishHour = 12;
+        
+        const estFinishMinute = finishTime.getMinutes();
+        const period = finishTime.getHours() >= 12 ? 'PM' : 'AM';
+        
+        setEstFinishHourNow(`${estFinishHour}:${estFinishMinute.toString().padStart(2, '0')} ${period}`);
+        setEstimateFinishTime(`${estFinishHour}:${estFinishMinute.toString().padStart(2, '0')} ${period}`);
+      } else {
+        setEstFinishHourNow(`9 Hr Completed`);
+        setEstimateFinishTime(`9 Hr Completed`);
+      }
+    } else if (currentHour >= 9) {
+      setEstFinishHourNow(`9 Hr Completed`);
     }
 
     let element25 = document.getElementById("25per");
@@ -254,16 +264,19 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
     let element100 = document.getElementById("100per");
 
     if (element25 && element50 && element75 && element100) {
-      parseFloat(`${currentHour}.${currentMinutes}`) >= 2.25
+      // Convert to decimal hours properly (e.g., 2h 15m = 2.25)
+      const totalHoursDecimal = currentHour + (currentMinutes / 60);
+      
+      totalHoursDecimal >= 2.25
         ? element25.classList.add("active")
         : element25.classList.remove("active");
-      parseFloat(`${currentHour}.${currentMinutes}`) >= 4.5
+      totalHoursDecimal >= 4.5
         ? element50.classList.add("active")
         : element50.classList.remove("active");
-      parseFloat(`${currentHour}.${currentMinutes}`) >= 6.75
+      totalHoursDecimal >= 6.75
         ? element75.classList.add("active")
         : element75.classList.remove("active");
-      parseFloat(`${currentHour}.${currentMinutes}`) >= 9
+      totalHoursDecimal >= 9
         ? element100.classList.add("active")
         : element100.classList.remove("active");
     }
@@ -271,22 +284,34 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
     let timeNow = new Date();
     if (timeNow.getHours() > 12) {
       setRunningHour(timeNow.getHours() - 12);
+    } else {
+      setRunningHour(timeNow.getHours());
     }
     setRunningMinutes(timeNow.getMinutes());
     setRunningSeconds(timeNow.getSeconds());
-    const timer = setTimeout(() => {
-      currentMinutes > 59 ? setCurrentHour((prevHour) => prevHour + 1) : "";
-      currentMinutes > 59
-        ? setCurrentMinutes((prevMinutes) => prevMinutes * 0)
-        : "";
-      currentSeconds > 59
-        ? setCurrentMinutes((prevMinutes) => prevMinutes + 1)
-        : "";
-      currentSeconds > 59
-        ? setCurrentSeconds((prevSeconds) => prevSeconds * 0)
-        : "";
-      setCurrentSeconds((prevSeconds) => prevSeconds + 1);
-    }, 1000);
+    
+    // Only run timer if shift hasn't ended and we have data
+    let timer;
+    if (!shiftEnded && showInfo) {
+      timer = setTimeout(() => {
+        setCurrentSeconds((prevSeconds) => {
+          const newSeconds = prevSeconds + 1;
+          if (newSeconds >= 60) {
+            setCurrentMinutes((prevMinutes) => {
+              const newMinutes = prevMinutes + 1;
+              if (newMinutes >= 60) {
+                setCurrentHour((prevHour) => prevHour + 1);
+                return 0;
+              }
+              return newMinutes;
+            });
+            return 0;
+          }
+          return newSeconds;
+        });
+      }, 1000);
+    }
+    
     updateProgressBar();
     return () => {
       clearTimeout(timer);

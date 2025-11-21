@@ -195,6 +195,7 @@ const QuizScreen = ({ category, onGameEnd }) => {
   const [timeLeft, setTimeLeft] = useState(20);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswerProcessed, setIsAnswerProcessed] = useState(false);
+  const [shuffledOptions, setShuffledOptions] = useState([]);
 
   // Helper function to shuffle array
   const shuffleArray = (array) => {
@@ -208,7 +209,11 @@ const QuizScreen = ({ category, onGameEnd }) => {
 
   useEffect(() => {
     const loadedQuestions = quizData[category] || [];
-    setQuestions(shuffleArray([...loadedQuestions]));
+    const shuffledQuestions = shuffleArray([...loadedQuestions]);
+    setQuestions(shuffledQuestions);
+    if (shuffledQuestions.length > 0) {
+      setShuffledOptions(shuffleArray([...shuffledQuestions[0].options]));
+    }
   }, [category]);
 
   useEffect(() => {
@@ -257,12 +262,13 @@ const QuizScreen = ({ category, onGameEnd }) => {
       setTimeLeft(20);
       setSelectedOption(null);
       setIsAnswerProcessed(false);
+      setShuffledOptions(shuffleArray([...questions[nextIndex].options]));
     } else {
       onGameEnd(score);
     }
   };
 
-  if (questions.length === 0) return <div>Initializing Data...</div>;
+  if (questions.length === 0 || shuffledOptions.length === 0) return <div>Initializing Data...</div>;
 
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
@@ -286,7 +292,7 @@ const QuizScreen = ({ category, onGameEnd }) => {
         <div className="question-text">{currentQuestion.question}</div>
         
         <div className="options-list">
-          {currentQuestion.options.map((opt) => {
+          {shuffledOptions.map((opt) => {
             let btnClass = "option-btn";
             if (isAnswerProcessed) {
               if (opt === currentQuestion.answer) btnClass += " correct";
@@ -354,11 +360,23 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
       name: userName, 
       score: score, 
       category: category, 
-      date: new Date().toLocaleDateString() 
+      date: new Date().toLocaleDateString(),
+      timestamp: Date.now() // Add unique identifier
     };
 
-    const allScores = [...storedScores, newEntry];
-    localStorage.setItem('quizHighScores', JSON.stringify(allScores));
+    // Check if this exact score was already saved (prevent duplicates)
+    const isDuplicate = storedScores.some(
+      entry => entry.name === userName && 
+               entry.score === score && 
+               entry.category === category && 
+               entry.date === newEntry.date
+    );
+
+    let allScores = storedScores;
+    if (!isDuplicate) {
+      allScores = [...storedScores, newEntry];
+      localStorage.setItem('quizHighScores', JSON.stringify(allScores));
+    }
 
     const categorySpecificScores = allScores.filter(
       (entry) => entry.category === category
@@ -369,7 +387,7 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
 
     setHighScores(top5);
 
-  }, [score, userName, category]);
+  }, []);
 
   return (
     <div className="fade-in" style={{ width: '100%', textAlign: 'center' }}>
