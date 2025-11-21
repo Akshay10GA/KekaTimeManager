@@ -1,501 +1,108 @@
 import Quiz from "./Quiz";
 
-const quizData = {
+const quizData = { 
   questions: [
-    {
-      question: "If a duck stole your sandwich, what would you do?",
-      options: ["Cry", "Chase it", "Make another one", "Respect the duck"],
-      answer: "Respect the duck",
-    },
-    {
-      question: "Why does food taste elite at 3 AM?",
-      options: [
-        "Forbidden hours",
-        "Hunger magic",
-        "Brain glitch",
-        "Night flavor",
-      ],
-      answer: "Night flavor",
-    },
-    {
-      question: "Why do we open the fridge like it's a treasure chest?",
-      options: ["Hope", "Curiosity", "Sadness", "Boredom hunger"],
-      answer: "Hope",
-    },
-    {
-      question: "Why does your shampoo finish faster than conditioner?",
-      options: ["Life scam", "Hair greed", "Showers too long", "Cosmic joke"],
-      answer: "Life scam",
-    },
-    {
-      question: "Why do kids run everywhere even when going nowhere?",
-      options: [
-        "Energy overflow",
-        "Chaos mode",
-        "Mini tornado vibes",
-        "Speed addiction",
-      ],
-      answer: "Chaos mode",
-    },
-    {
-      question: "Why does your leg shake when sitting for too long?",
-      options: [
-        "Energy leak",
-        "Brain beats",
-        "Random rhythm",
-        "Human motor idle",
-      ],
-      answer: "Energy leak",
-    },
-    {
-      question: "Why do you hold your breath when clicking something risky?",
-      options: ["Fear", "Focus", "Drama", "Life loading"],
-      answer: "Life loading",
-    },
-    {
-      question: "Why do we say 'I'm fine' while suffering inside?",
-      options: [
-        "Habit",
-        "Emotional training",
-        "Overthinking",
-        "Doesn’t matter anymore",
-      ],
-      answer: "Habit",
-    },
-    {
-      question: "Why does your phone fall on your face when scrolling?",
-      options: [
-        "Gravity bullying",
-        "Skill issue",
-        "Clumsy curse",
-        "Phone seeking revenge",
-      ],
-      answer: "Gravity bullying",
-    },
-    {
-      question: "Why do dogs stare at you while you're eating?",
-      options: ["Begging", "Judgment", "Telepathy attempt", "Pure hope"],
-      answer: "Telepathy attempt",
-    },
-
-    {
-      question: "Why is water extra delicious after waking up thirsty?",
-      options: [
-        "Hydration magic",
-        "Soul reset",
-        "Liquid happiness",
-        "Throat blessing",
-      ],
-      answer: "Hydration magic",
-    },
-    {
-      question: "Why do babies stare at random corners like they see spirits?",
-      options: [
-        "Curiosity",
-        "Ghost interactions",
-        "Visual confusion",
-        "Baby mystery",
-      ],
-      answer: "Baby mystery",
-    },
-    {
-      question: "Why do humans stretch like they woke from a 300-year slumber?",
-      options: ["Drama", "Muscle revival", "Body reboot", "Ancient instinct"],
-      answer: "Body reboot",
-    },
-    {
-      question: "Why does bread always fall butter-side down?",
-      options: [
-        "Murphy's law",
-        "Gravity joke",
-        "Universe trolling",
-        "Butter curse",
-      ],
-      answer: "Murphy's law",
-    },
-    {
-      question: "What’s the scariest thing at 3 AM?",
-      options: [
-        "Random noise",
-        "Your reflection",
-        "Your imagination",
-        "Phone at 1%",
-      ],
-      answer: "Your reflection",
-    },
-    {
-      question: "Why do pigeons walk like they own the place?",
-      options: ["Confidence", "Arrogance", "City swag", "Bird pride"],
-      answer: "City swag",
-    },
-    {
-      question: "Why do we think of the perfect comeback hours later?",
-      options: [
-        "Late genius",
-        "Emotional delay",
-        "Brain betrayal",
-        "Argument lag",
-      ],
-      answer: "Late genius",
-    },
-    {
-      question:
-        "Why does your brain remind you of embarrassing moments randomly?",
-      options: ["Cruelty", "Flashback mode", "Trauma reruns", "Brain bullying"],
-      answer: "Brain bullying",
-    },
-    {
-      question: "Why do we talk louder on the phone when the signal is bad?",
-      options: [
-        "Human logic error",
-        "Shouting instinct",
-        "Panic mode",
-        "Brain confusion",
-      ],
-      answer: "Shouting instinct",
-    },
-    {
-      question: "Why do we look at people eating our favorite food?",
-      options: ["Envy", "Pain", "Jealous appetite", "Food longing"],
-      answer: "Envy",
-    },
-
-    {
-      question: "Why do we act like ninjas turning off the lights?",
-      options: ["Habit", "Childhood fear", "Safety ritual", "Shadow mode"],
-      answer: "Shadow mode",
-    },
-    {
-      question: "Why does food cooked by someone else taste better?",
-      options: ["Love", "Less effort", "Mystery seasoning", "Mental upgrade"],
-      answer: "Less effort",
-    },
-    {
-      question: "Why does walking into a room make you forget your purpose?",
-      options: [
-        "Brain reset",
-        "Dimension jump",
-        "Memory flush",
-        "Doorway spell",
-      ],
-      answer: "Doorway spell",
-    },
-    {
-      question: "Why is the floor extra loud at night?",
-      options: ["Drama", "Echo mode", "House spirits", "Night acoustics"],
-      answer: "Drama",
-    },
-    {
-      question: "Why do we stretch our lips when putting on mascara?",
-      options: [
-        "Strange instinct",
-        "Balance myth",
-        "Makeup reflex",
-        "Unknown science",
-      ],
-      answer: "Strange instinct",
-    },
-    {
-      question: "Why do people say '5 minutes' when they mean 20?",
-      options: ["Lie", "Hope", "Time dilation", "Chill mode"],
-      answer: "Time dilation",
-    },
-    {
-      question: "Why does your stomach growl only in quiet rooms?",
-      options: [
-        "Drama queen",
-        "Attention seeking",
-        "Noise competition",
-        "Hunger rebellion",
-      ],
-      answer: "Drama queen",
-    },
-    {
-      question: "Why do socks disappear in the wash?",
-      options: [
-        "Washing machine portal",
-        "Laundry monsters",
-        "Static theft",
-        "Vanishing magic",
-      ],
-      answer: "Washing machine portal",
-    },
-    {
-      question: "Why do we panic when someone says 'We need to talk'?",
-      options: [
-        "Fear instinct",
-        "Past trauma",
-        "Doom prophecy",
-        "Conversation anxiety",
-      ],
-      answer: "Doom prophecy",
-    },
-    {
-      question: "Why does your hair look perfect when you’re going nowhere?",
-      options: ["Cosmic joke", "Luck", "Bad timing", "Reverse beauty law"],
-      answer: "Reverse beauty law",
-    },
-
-    {
-      question: "Why do we talk to inanimate objects when they fall?",
-      options: ["Anger", "Sympathy", "Habit", "Emotional malfunction"],
-      answer: "Anger",
-    },
-    {
-      question: "Why do lizards run like they’re late for work?",
-      options: ["Speed", "Fear", "Drama sprint", "Natural urgency"],
-      answer: "Drama sprint",
-    },
-    {
-      question:
-        "Why do we drink water like it's the best thing ever after a nap?",
-      options: [
-        "Thirst revival",
-        "Soul hydration",
-        "Liquid resurrection",
-        "Fresh life buff",
-      ],
-      answer: "Liquid resurrection",
-    },
-    {
-      question: "Why do people walk like action heroes after gym?",
-      options: [
-        "Muscle pain",
-        "Confidence boost",
-        "Slow motion fantasy",
-        "Hero mode",
-      ],
-      answer: "Hero mode",
-    },
-    {
-      question:
-        "Why does food burn your tongue but stay volcanic hot for 10 minutes?",
-      options: [
-        "Thermal betrayal",
-        "Physics prank",
-        "Mouth curse",
-        "Heat durability",
-      ],
-      answer: "Thermal betrayal",
-    },
-    {
-      question: "Why do we push doors that say Pull?",
-      options: ["Rebellion", "Brain autopilot", "Misread", "Door confusion"],
-      answer: "Brain autopilot",
-    },
-    {
-      question: "Why do we laugh harder when we shouldn’t?",
-      options: [
-        "Forbidden humor",
-        "Social chaos",
-        "Brain misfire",
-        "Nervous energy",
-      ],
-      answer: "Forbidden humor",
-    },
-    {
-      question: "Why does cereal taste better at night?",
-      options: [
-        "Night cereal law",
-        "Forbidden crunch",
-        "Sleepy hunger",
-        "Brain reward",
-      ],
-      answer: "Night cereal law",
-    },
-    {
-      question: "Why do pens disappear so easily?",
-      options: ["Wormhole", "Borrowers", "Desk gremlins", "Human carelessness"],
-      answer: "Desk gremlins",
-    },
-    {
-      question: "Why do cats knock things off tables?",
-      options: ["Chaos", "Experiment", "Attention", "Scientific research"],
-      answer: "Scientific research",
-    },
-
-    {
-      question: "Why do we whisper 'ouch' when someone ELSE gets hurt?",
-      options: [
-        "Sympathy glitch",
-        "Empathy overload",
-        "Social mirroring",
-        "Pain echo",
-      ],
-      answer: "Pain echo",
-    },
-    {
-      question: "Why do we always drop our phones on our face?",
-      options: [
-        "Gravity betrayal",
-        "Weak grip",
-        "Destiny",
-        "Punishment for scrolling",
-      ],
-      answer: "Gravity betrayal",
-    },
-    {
-      question: "Why is it so hard to choose what to eat?",
-      options: [
-        "Too many options",
-        "No options",
-        "Mood swings",
-        "Decision fatigue",
-      ],
-      answer: "Decision fatigue",
-    },
-    {
-      question: "Why do we stare at walls when overwhelmed?",
-      options: [
-        "Brain reboot",
-        "Mental blue screen",
-        "Visual rest",
-        "Internal scream",
-      ],
-      answer: "Brain reboot",
-    },
-    {
-      question: "Why do geese act like they own the world?",
-      options: [
-        "Confidence",
-        "Anger issues",
-        "Bird politics",
-        "Goose arrogance",
-      ],
-      answer: "Goose arrogance",
-    },
-    {
-      question: "Why do we sing louder when we’re alone?",
-      options: [
-        "Freedom mode",
-        "No judgment",
-        "Bathroom acoustics",
-        "Concert fantasy",
-      ],
-      answer: "Concert fantasy",
-    },
-    {
-      question: "Why do we open our mouths while drawing?",
-      options: [
-        "Focus",
-        "Concentration leak",
-        "Strange instinct",
-        "Brain overflow",
-      ],
-      answer: "Concentration leak",
-    },
-    {
-      question: "Why does your phone battery drop from 20% to 1% instantly?",
-      options: [
-        "Drama",
-        "Battery depression",
-        "Time to panic",
-        "Phone betrayal",
-      ],
-      answer: "Phone betrayal",
-    },
-    {
-      question: "Why do we salute the air when a fly buzzes near us?",
-      options: ["Reflex", "Fear", "Combat instinct", "Bug battle mode"],
-      answer: "Bug battle mode",
-    },
-    {
-      question: "Why does your brain roast you at night?",
-      options: [
-        "Entertainment",
-        "Self-insult feature",
-        "Memory rewind",
-        "Brain chaos",
-      ],
-      answer: "Self-insult feature",
-    },
-
-    {
-      question: "Why do dogs run in circles before lying down?",
-      options: [
-        "Ancient ritual",
-        "Comfort scan",
-        "Nesting behavior",
-        "Just dog things",
-      ],
-      answer: "Just dog things",
-    },
-    {
-      question: "Why do people sneeze like they’re summoning thunderstorms?",
-      options: ["Power", "Drama", "Genetics", "Sneeze supremacy"],
-      answer: "Drama",
-    },
-    {
-      question: "Why do we open bags of chips like they owe us money?",
-      options: [
-        "Hunger aggression",
-        "Snack urgency",
-        "Excitement burst",
-        "Bag disrespect",
-      ],
-      answer: "Snack urgency",
-    },
-    {
-      question: "Why do we walk faster when someone walks behind us?",
-      options: ["Fear", "Speed challenge", "Personal space", "Instinct"],
-      answer: "Fear",
-    },
-    {
-      question: "Why does the universe make wires tangle automatically?",
-      options: [
-        "Chaos law",
-        "Cable spirits",
-        "Static nonsense",
-        "Just to annoy you",
-      ],
-      answer: "Chaos law",
-    },
-    {
-      question: "Why do we always pick the slowest line at the store?",
-      options: [
-        "Bad luck",
-        "Universe trolling",
-        "Line curse",
-        "Timing misfortune",
-      ],
-      answer: "Universe trolling",
-    },
-    {
-      question: "Why does a simple task turn into a life crisis?",
-      options: [
-        "Overthinking",
-        "Stress hobby",
-        "Mental chaos",
-        "Low battery life",
-      ],
-      answer: "Overthinking",
-    },
-    {
-      question: "Why do we laugh at our own jokes?",
-      options: [
-        "Comedy ego",
-        "Self-entertainment",
-        "Silence avoidance",
-        "We’re hilarious",
-      ],
-      answer: "We’re hilarious",
-    },
-    {
-      question: "Why does a random song live in your head rent-free?",
-      options: ["Earworm", "Brain autoplay", "Inner radio", "Memory loop"],
-      answer: "Brain autoplay",
-    },
-    {
-      question: "Why do we whisper to ourselves during dangerous tasks?",
-      options: [
-        "Motivation",
-        "Self coaching",
-        "Fear mutter",
-        "Internal pep talk",
-      ],
-      answer: "Internal pep talk",
-    },
-  ],
+  {
+    question: "Rahul Gandhi ne bola 'Aaloo ke machine se sona nikalega', machine ka kya reaction hoga?",
+    options: ["Sone ka patent daal diya", "Aaloo ne strike kar di", "Machine bhi Pappu ban gayi", "BJP ne machine kharid li"],
+    answer: "Machine bhi Pappu ban gayi"
+  },
+  {
+    question: "Modi ji ne bola 'Cloud se chhup ke drone udayenge kyunki radar nahi pakadta', Indian Air Force pilot kya sochega?",
+    options: ["Sir aap PM ho ya hacker?", "Cloud mein Wi-Fi bhi hai kya?", "Ab monsoon mein attack karenge", "GPS ko chhutti de di"],
+    answer: "Sir aap PM ho ya hacker?"
+  },
+  {
+    question: "Kejriwal ji ne bola 'Main IITian hoon, bijli free ka formula khud banaya', IIT alumni group mein kya message aaya?",
+    options: ["Batchmate kaun hai ye?", "Degree wapas le lo", "Arre ye toh failed entrepreneur tha", "Free degree bhi di thi kya?"],
+    answer: "Degree wapas le lo"
+  },
+  {
+    question: "Smriti Irani ne bola 'Main HRD minister hoon aur Cambridge se padhi hoon', Cambridge University ne kya kiya?",
+    options: ["Website crash", "Disclaimer daal diya", "Never heard of her tweet kiya", "Yale se jealous ho gaye"],
+    answer: "Disclaimer daal diya"
+  },
+  {
+    question: "Akhilesh Yadav ne bola 'Gujarat ke donkeys ko UP la rahe hain', donkey ne kya socha?",
+    options: ["Hum toh lion se bhi tez bhagte hain", "Arre humara toh CM banne ka chance tha", "UP mein gadha raj aayega", "Cycle se tez chalenge"],
+    answer: "Arre humara toh CM banne ka chance tha"
+  },
+  {
+    question: "Kapil Sharma ne bola 'Main election nahi ladunga, hasi mazak ka kaam hai', public ne kya comment kiya?",
+    options: ["Bhai tu aaja, baaki sab toh clown hain", "At least tu sach bolta hai", "Comedy se politics better hai", "Fir se tax notice aayega"],
+    answer: "Bhai tu aaja, baaki sab toh clown hain"
+  },
+  {
+    question: "Baba Ramdev ne bola 'Allopathy wale marte hain, yog se nahi marte', doctor community ne kya reply diya?",
+    options: ["Baba aapka BP check kar lein", "Coronil se oxygen level badhta hai kya?", "Hum marte hain toh aapka ilaaj kaun karega?", "Next time vaccine mat lagwana"],
+    answer: "Hum marte hain toh aapka ilaaj kaun karega?"
+  },
+  {
+    question: "Kangana ne bola 'Freedom 2014 mein mili hai', 1947 wale freedom fighters ne kya kiya?",
+    options: ["Bhagat Singh ne block kar diya", "Gandhi ji ne charkha tod diya", "Nehru ji rolling in grave", "Subhash Bose ne wapas aa gaye"],
+    answer: "Nehru ji rolling in grave"
+  },
+  {
+    question: "Nitish Kumar ne bola 'Main palti nahi marta', news channel ne kya headline banayi?",
+    options: ["Breaking: Nitish Kumar ka jhooth detector kharab", "Aaj palti count – 9", "Bihar mein earthquake", "Palti Olympic gold"],
+    answer: "Palti Olympic gold"
+  },
+  {
+    question: "Rabri Devi ne bola 'Lalu ji jail mein bhi TV dekhte hain, unko sab pata hai', jailor ne kya note kiya?",
+    options: ["TV band karo", "Ye toh remote control se sarkar chala rahe", "Chara ghotala ka sequel dekh rahe honge", "Netflix subscription jail mein?"],
+    answer: "Ye toh remote control se sarkar chala rahe"
+  },
+  {
+    question: "Tejasvi Surya ne bola 'Main 26 saal mein MP ban gaya, Rahul 50 mein bhi nahi', Rahul ne kya replay diya?",
+    options: ["Quality > quantity", "Main toh hug kar sakta hoon", "Tum bhi 50 tak ruk jao", "Pappu tag remove karwa diya"],
+    answer: "Main toh hug kar sakta hoon"
+  },
+  {
+    question: "Sambit Patra ne bola 'Indira is India, India is Indira', fir realize galti ho gayi, kya damage control kiya?",
+    options: ["Godi media ne mute kar diya", "Modira bol diya", "Twitter se delete", "Arre mic kharab tha"],
+    answer: "Modira bol diya"
+  },
+  {
+    question: "Hema Malini Mathura mein boli 'Main yahan paani laungi', kisan ne kya poocha?",
+    options: ["Dream girl ya pipe girl?", "Yamuna mein paani kab se aaya?", "Dharmendra ji pipeline daal denge?", "Reel mein hi paani laa do"],
+    answer: "Dream girl ya pipe girl?"
+  },
+  {
+    question: "Sakshi Maharaj ne bola 'Hindu auratein 4 bache paida karein', population control bill wale ne kya socha?",
+    options: ["Baba ko bill ki copy bhejo", "Ye khud kitne bache ke baap hain?", "Hindu rashtra ka family planning", "Adoption se count hoga kya?"],
+    answer: "Ye khud kitne bache ke baap hain?"
+  },
+  {
+    question: "Sunny Deol ne Gurdaspur mein bola 'Dhai kilo ka haath' aur jeet gaye, voter ne kya socha?",
+    options: ["Bas haath hi kaafi tha", "Dialogue se development", "Border film ka sequel", "Pakistan darr gaya"],
+    answer: "Bas haath hi kaafi tha"
+  },
+  {
+    question: "Kejriwal ne bola 'Main aam aadmi hoon', fir 10 crore ka sheeshmahal banwaya, aam aadmi ne kya poocha?",
+    options: ["Bhai ye aam ka ped kahan hai?", "Sheeshmahal mein free entry milegi?", "Hamara ghar kab banega?", "Muffler bhi imported hai kya?"],
+    answer: "Bhai ye aam ka ped kahan hai?"
+  },
+  {
+    question: "Yogi ji ne bola 'Baba ka bulldozer', bulldozer driver ne kya poocha?",
+    options: ["Sir overtime milega?", "Petrol ka bill kaun bharega?", "Gunda ka ghar ya galat nirman?", "Mera bhi naam poster mein daal do"],
+    answer: "Petrol ka bill kaun bharega?"
+  },
+  {
+    question: "Shashi Tharoor ne tweet kiya 'Cattle class', fir sorry bola, gau rakshak ne kya kiya?",
+    options: ["Gau raksha squad bheja", "Dictionary jala di", "Oxford se degree cancel karwaya", "Tharoor ji ko gaay ka doodh pilaya"],
+    answer: "Gau raksha squad bheja"
+  },
+  {
+    question: "Gautam Gambhir smile wale ad mein bole 'Smile please', fir opposition ko gali di, brand ne kya kiya?",
+    options: ["Contract cancel", "Smile wala ad band", "Angry version launch kiya", "Free dental checkup offer"],
+    answer: "Smile wala ad band"
+  },
+  {
+    question: "Nirmala Tai ne bola 'Onion 100 rupaye kilo hai toh mat khao', onion ne kya kiya?",
+    options: ["Rone lagi", "Pyaz union strike pe", "Biriyani boycott kar diya", "Lehsun jealous ho gaya"],
+    answer: "Rone lagi"
+  }
+]
 };
 
 export { quizData };
