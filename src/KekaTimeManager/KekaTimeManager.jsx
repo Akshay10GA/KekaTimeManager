@@ -6,8 +6,7 @@ import CalculateButton from "../components/CalculateButton/CalculateButton";
 import "./KekaTimeManager.css";
 import ToggleSelector from "../components/ToggleSelector/ToggleSelector";
 import { Backgrounds } from "../Background";
-import { quizData } from "../components/Quiz/Questions";
-import Quiz from "../components/Quiz/Quiz";
+import NewQuiz from "../components/Quiz/NewQuiz";
 
 const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCalculator}) => {
   const [renderer, setRenderer] = useState(true);
@@ -333,28 +332,48 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
         }
       />
       {showKekaCalculator && (
-        <button
-          onClick={() => setShowQuiz(!showQuiz)}
-          className="quiz-toggle-button"
+        <div 
+          className="tab-selector-container quiz-toggle-container"
           style={{
-          position: 'absolute',
-          top: '6px',
-          left: '21ox',
-          transform: 'translateX(-550%)',
-          padding: '10px 20px',
-          borderRadius: '8px',
-          border: '2px solid white',
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: 'white',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          zIndex: 1000,
-          backdropFilter: 'blur(10px)',
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-450%)',
+            margin: '10px',
+            width: 'fit-content',
+            height: 'fit-content',
+            background: '#343434',
+            display: 'flex',
+            borderRadius: '50px',
+            pointerEvents: 'all',
+            cursor: 'pointer',
+            zIndex: 1000,
           }}
         >
-          {showQuiz ? '📊 Show Calculator' : '🎮 Show Quiz'}
-        </button>
+          <div
+            onClick={() => setShowQuiz(false)}
+            className={!showQuiz ? 'active-tab' : ''}
+            style={{
+              minWidth: '50px',
+              margin: '5px',
+              padding: '5px 10px',
+              borderRadius: '50px',
+            }}
+          >
+            Calculator
+          </div>
+          <div
+            onClick={() => setShowQuiz(true)}
+            className={showQuiz ? 'active-tab' : ''}
+            style={{
+              minWidth: '50px',
+              margin: '5px',
+              padding: '5px 10px',
+              borderRadius: '50px',
+            }}
+          >
+            Quiz
+          </div>
+        </div>
       )}
       {!showKekaCalculator && (
         <div className="background-options">
@@ -387,7 +406,7 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
             clockTime={clockTime}
           />
           {showQuiz ? (
-            <Quiz quizData={quizData}/>
+            <NewQuiz />
           ) : (
             <>
               <TimeInput onInputChange={handleChange} />
