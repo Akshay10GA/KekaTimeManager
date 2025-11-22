@@ -1421,7 +1421,10 @@ export default function App() {
             </h3>
             {/* CHANGED CLASS FROM mobile-list TO dashboard-list */}
             <div className="dashboard-list">
-              {transactions.slice(0, 5).map((t) => (
+              {transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5)
+                .map((t) => (
                 <div key={t.id} style={{borderBottom: '1px solid #EEEEEE', paddingBottom: '8px'}}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
