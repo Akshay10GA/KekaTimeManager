@@ -24,7 +24,9 @@ import {
   LogIn,
   LogOut,
   ShieldAlert,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  MessageSquare
 } from 'lucide-react';
 
 // --- Embedded CSS Styles ---
@@ -33,7 +35,7 @@ const styles = `
   /* Color Palette */
   --color-primary: #1D1616;   /* Dark/Black */
   --color-brand: #8E1616;     /* Deep Red */
-  --color-accent: #D84040;    /* Red */
+  --color-accent: #00610d;    /* Green */
   --color-bg: #EEEEEE;        /* Light Grey */
   --color-white: #ffffff;
   
@@ -708,7 +710,7 @@ const compressImage = (file) => {
 };
 
 export default function App() {
-  const { isXLSXLoaded } = useExternalScripts();
+  const { isXLSXLoaded, isGISLoaded } = useExternalScripts();
   
   // State
   const [transactions, setTransactions] = useState([]);
@@ -719,6 +721,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [notification, setNotification] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [personFilter, setPersonFilter] = useState(null); // For filtering by person
   
   // Sync State
   const [syncTab, setSyncTab] = useState('manual'); // 'manual' or 'google'
@@ -727,6 +730,9 @@ export default function App() {
   const [googleToken, setGoogleToken] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // New State for Auto-Login
+  const [autoSync, setAutoSync] = useState(false);
 
   // Autocomplete State
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
@@ -736,6 +742,7 @@ export default function App() {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     name: '',
+    mobile: '',
     amount: '',
     type: 'lent',
     note: '',
@@ -757,7 +764,11 @@ export default function App() {
       }
     }
     if (savedUrl) setGoogleSheetUrl(savedUrl);
-    if (savedClientId) setGoogleClientId(savedClientId);
+    if (savedClientId) {
+      setGoogleClientId(savedClientId);
+      setSyncTab('google'); // Set UI tab
+      setAutoSync(true); // Trigger auto login flag
+    }
   }, []);
 
   // Save to LocalStorage
@@ -773,6 +784,35 @@ export default function App() {
     if (googleSheetUrl) localStorage.setItem('ledger_sync_url', googleSheetUrl);
     if (googleClientId) localStorage.setItem('ledger_client_id', googleClientId);
   }, [googleSheetUrl, googleClientId]);
+
+  // Auto-Login Effect
+  useEffect(() => {
+    if (autoSync && isGISLoaded && googleClientId) {
+      try {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+          callback: (response) => {
+            if (response.access_token) {
+              setGoogleToken(response.access_token);
+              showNotify('Auto-logged in! Pulling data...');
+              // Trigger Pull immediately with the fresh token
+              syncWithGoogleAPI('pull', response.access_token);
+            } else {
+              showNotify('Auto-login failed.', 'error');
+            }
+            setAutoSync(false); // Turn off the flag after one attempt
+          },
+        });
+        // Trigger popup (browser might block this if no user interaction)
+        // If blocked, user has to click "Login" manually later.
+        client.requestAccessToken();
+      } catch (err) {
+        console.error("Auto login error:", err);
+        setAutoSync(false);
+      }
+    }
+  }, [autoSync, isGISLoaded, googleClientId]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -926,8 +966,10 @@ export default function App() {
   };
 
   // 2. Direct Google API Method
-  const syncWithGoogleAPI = async (direction) => {
-    if (!googleToken) {
+  // Added optional tokenOverride for auto-login scenario
+  const syncWithGoogleAPI = async (direction, tokenOverride = null) => {
+    const token = tokenOverride || googleToken;
+    if (!token) {
       showNotify('Please sign in first', 'error');
       return;
     }
@@ -938,7 +980,7 @@ export default function App() {
       // Step A: Find Spreadsheet
       const searchUrl = "https://www.googleapis.com/drive/v3/files?q=name='LedgerLink_DB' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false";
       const searchRes = await fetch(searchUrl, {
-        headers: { Authorization: `Bearer ${googleToken}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       const searchData = await searchRes.json();
       
@@ -955,7 +997,7 @@ export default function App() {
         // Create if not found (only needed for push/initial setup)
         const createRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
           method: "POST",
-          headers: { Authorization: `Bearer ${googleToken}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ properties: { title: "LedgerLink_DB" } })
         });
         const createData = await createRes.json();
@@ -996,20 +1038,20 @@ export default function App() {
          // *** IMAGE UPLOAD LOGIC END ***
 
          // Prepare Data for Sheet
-         const headers = ['id', 'date', 'name', 'amount', 'type', 'note', 'image'];
+         const headers = ['id', 'date', 'name', 'mobile', 'amount', 'type', 'note', 'image'];
          const rows = updatedTransactions.map(t => headers.map(h => t[h] || ""));
          const values = [headers, ...rows];
 
          // Clear Sheet First
          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${googleToken}` }
+            headers: { Authorization: `Bearer ${token}` }
          });
 
          // Write Data
          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
             method: "PUT",
-            headers: { Authorization: `Bearer ${googleToken}`, 'Content-Type': 'application/json' },
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ values })
          });
          
@@ -1018,7 +1060,7 @@ export default function App() {
       } else {
          // Pull Data
          const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`, {
-             headers: { Authorization: `Bearer ${googleToken}` }
+             headers: { Authorization: `Bearer ${token}` }
          });
          const getData = await getRes.json();
          
@@ -1044,7 +1086,7 @@ export default function App() {
     } catch (err) {
       console.error(err);
       showNotify('Google Sync Error. Token might be expired.', 'error');
-      setGoogleToken(null); // Reset token on error
+      if(!tokenOverride) setGoogleToken(null); // Only reset if not auto-login attempt
     } finally {
       setIsSyncing(false);
     }
@@ -1055,6 +1097,7 @@ export default function App() {
         id: parseFloat(row.id) || Date.now() + Math.random(),
         date: row.date || new Date().toISOString().split('T')[0],
         name: row.name || 'Unknown',
+        mobile: row.mobile || '',
         amount: parseFloat(row.amount) || 0,
         type: (row.type || 'lent').toLowerCase(),
         note: row.note || '',
@@ -1081,14 +1124,15 @@ export default function App() {
           id: row.id || row.ID || Date.now() + Math.random(),
           date: row.date || row.Date || new Date().toISOString().split('T')[0],
           name: row.name || row.Name || 'Unknown',
+          mobile: row.mobile || row.Mobile || '',
           amount: parseFloat(row.amount || row.Amount || 0),
           type: (row.type || row.Type || 'lent').toLowerCase(),
           note: row.note || row.Note || '',
           image: null 
         }));
 
-        setTransactions(normalizedData);
-        showNotify('Excel imported! (Images cannot be imported)');
+        setTransactions([...normalizedData, ...transactions]);
+        showNotify(`${normalizedData.length} records imported! (Images cannot be imported)`);
       } catch (err) {
         showNotify('Error reading Excel file.', 'error');
       }
@@ -1103,6 +1147,7 @@ export default function App() {
         ID: t.id,
         Date: t.date,
         Name: t.name,
+        Mobile: t.mobile || '',
         Type: t.type,
         Amount: t.amount,
         Note: t.note,
@@ -1160,6 +1205,7 @@ export default function App() {
     setFormData({
       date: transaction.date,
       name: transaction.name,
+      mobile: transaction.mobile || '',
       amount: transaction.amount,
       type: transaction.type,
       note: transaction.note,
@@ -1175,6 +1221,7 @@ export default function App() {
     setFormData({
       date: new Date().toISOString().split('T')[0],
       name: '',
+      mobile: '',
       amount: '',
       type: 'lent',
       note: '',
@@ -1185,6 +1232,61 @@ export default function App() {
   const deleteTransaction = (id) => {
     setTransactions(transactions.filter(t => t.id !== id));
     showNotify('Transaction deleted');
+  };
+
+  const sendWhatsAppReport = (personName, personMobile) => {
+    if (!personMobile) {
+      showNotify('No mobile number found for this person', 'error');
+      return;
+    }
+
+    // Get all transactions for this person
+    const personTransactions = transactions
+      .filter(t => t.name.trim() === personName)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (personTransactions.length === 0) {
+      showNotify('No transactions found', 'error');
+      return;
+    }
+
+    // Calculate totals
+    let totalLent = 0;
+    let totalReturned = 0;
+    personTransactions.forEach(t => {
+      if (t.type === 'lent') totalLent += t.amount;
+      else totalReturned += t.amount;
+    });
+    const balance = totalLent - totalReturned;
+
+    // Format detailed report
+    let message = `📊 *Transaction Report for ${personName}*\n\n`;
+    message += `📅 *Period:* ${personTransactions[0].date} to ${personTransactions[personTransactions.length - 1].date}\n\n`;
+    message += `💰 *Summary:*\n`;
+    message += `   • Total Lent: ₹${totalLent.toLocaleString()}\n`;
+    message += `   • Total Returned: ₹${totalReturned.toLocaleString()}\n`;
+    message += `   • Balance: ${balance >= 0 ? '+' : ''}₹${balance.toLocaleString()}\n\n`;
+    message += `📋 *Transaction Details:*\n\n`;
+
+    personTransactions.forEach((t, idx) => {
+      message += `${idx + 1}. *${t.date}*\n`;
+      message += `   Type: ${t.type === 'lent' ? '📤 Lent' : '📥 Returned'}\n`;
+      message += `   Amount: ₹${t.amount.toLocaleString()}\n`;
+      if (t.note) message += `   Note: ${t.note}\n`;
+      message += `\n`;
+    });
+
+    message += `\n---\n_Generated from LedgerLink_`;
+
+    // Clean mobile number (remove spaces, dashes, etc.)
+    const cleanMobile = personMobile.replace(/[^0-9+]/g, '');
+    
+    // Create WhatsApp URL
+    const whatsappUrl = `https://wa.me/${cleanMobile}?text=${encodeURIComponent(message)}`;
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+    showNotify('Opening WhatsApp...');
   };
 
   const stats = useMemo(() => {
@@ -1205,12 +1307,18 @@ export default function App() {
     const people = {};
     transactions.forEach(t => {
       const name = t.name.trim();
-      if (!people[name]) people[name] = 0;
-      if (t.type === 'lent') people[name] += t.amount;
-      else people[name] -= t.amount;
+      if (!people[name]) {
+        people[name] = { balance: 0, mobile: t.mobile || '' };
+      }
+      if (t.type === 'lent') people[name].balance += t.amount;
+      else people[name].balance -= t.amount;
+      // Update mobile if newer transaction has it
+      if (t.mobile && !people[name].mobile) {
+        people[name].mobile = t.mobile;
+      }
     });
     return Object.entries(people)
-      .map(([name, balance]) => ({ name, balance }))
+      .map(([name, data]) => ({ name, balance: data.balance, mobile: data.mobile }))
       .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance));
   }, [transactions]);
 
@@ -1224,10 +1332,14 @@ export default function App() {
     return uniqueNames.filter(n => n.toLowerCase().includes(formData.name.toLowerCase()));
   }, [uniqueNames, formData.name]);
 
-  const filteredTransactions = transactions.filter(t => 
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.note.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTransactions = transactions
+    .filter(t => {
+      const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           t.note.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPerson = !personFilter || t.name.trim() === personFilter;
+      return matchesSearch && matchesPerson;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // --- Render Parts ---
 
@@ -1239,7 +1351,7 @@ export default function App() {
           <div className="card-body">
             <div className="stat-header">
               <div className="stat-icon lent"><ArrowUpRight size={20} /></div>
-              <span className="stat-label">Owed To You</span>
+              <span className="stat-label">Total Spend</span>
             </div>
             <div className="stat-value text-primary">₹{stats.lent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
@@ -1249,7 +1361,7 @@ export default function App() {
           <div className="card-body">
             <div className="stat-header">
               <div className="stat-icon borrowed"><ArrowDownLeft size={20} /></div>
-              <span className="stat-label">You Owe</span>
+              <span className="stat-label">{stats.lent > stats.borrowed ? 'Recovered' : 'In Debt'}</span>
             </div>
             <div className="stat-value text-accent">₹{stats.borrowed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
@@ -1414,6 +1526,20 @@ export default function App() {
           
           {activeTab === 'transactions' && (
             <div>
+               {personFilter && (
+                 <div style={{marginBottom: '16px', padding: '12px', background: 'var(--color-brand-fade)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                   <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                     <Users size={18} className="text-brand" />
+                     <span className="text-primary" style={{fontWeight: '500'}}>Viewing transactions for: <strong>{personFilter}</strong></span>
+                   </div>
+                   <button onClick={() => {
+                     setPersonFilter(null);
+                     showNotify('Filter cleared');
+                   }} className="btn btn-ghost" style={{padding: '6px 12px', fontSize: '0.875rem'}}>
+                     <X size={16} /> Clear Filter
+                   </button>
+                 </div>
+               )}
                <div className="search-bar">
                  <Search size={20} className="text-brand" />
                  <input 
@@ -1445,7 +1571,7 @@ export default function App() {
                          <td className="text-primary" style={{fontWeight: 'bold'}}>{t.name}</td>
                          <td>
                            <span className={`badge ${t.type}`}>
-                            {t.type === 'lent' ? 'Lent' : 'Borrowed'}
+                            {t.type === 'lent' ? 'Lent' : 'Returned'}
                            </span>
                          </td>
                          <td className={t.type === 'lent' ? 'text-primary' : 'text-accent'} style={{textAlign: 'right', fontWeight: 'bold'}}>
@@ -1483,7 +1609,7 @@ export default function App() {
                          <p className="trans-date">{t.date}</p>
                        </div>
                        <span className={`badge ${t.type}`}>
-                        {t.type === 'lent' ? 'Lent' : 'Borrowed'}
+                        {t.type === 'lent' ? 'Lent' : 'Returned'}
                        </span>
                      </div>
                      <div className="trans-footer">
@@ -1508,7 +1634,11 @@ export default function App() {
           {activeTab === 'people' && (
             <div className="stats-grid">
               {peopleSummary.map((person, idx) => (
-                <div key={idx} className="card" style={{textAlign: 'center', padding: '24px', borderTop: '4px solid var(--color-brand)'}}>
+                <div key={idx} className="card" style={{textAlign: 'center', padding: '24px', borderTop: '4px solid var(--color-brand)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'} onClick={() => {
+                    setPersonFilter(person.name);
+                    setActiveTab('transactions');
+                    showNotify(`Viewing transactions for ${person.name}`);
+                  }}>
                   <div style={{
                     width: '64px', height: '64px', borderRadius: '50%', 
                     background: person.balance >= 0 ? 'var(--color-primary)' : 'var(--color-accent)',
@@ -1518,10 +1648,28 @@ export default function App() {
                     {person.name.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="text-primary" style={{fontSize: '1.125rem', fontWeight: 'bold'}}>{person.name}</h3>
+                  {person.mobile && (
+                    <p className="text-brand" style={{fontSize: '0.875rem', margin: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}>
+                      <Phone size={14} /> {person.mobile}
+                    </p>
+                  )}
                   <p className="text-brand" style={{fontSize: '0.875rem', margin: '4px 0 16px 0'}}>Net Balance</p>
                   <div className={person.balance >= 0 ? 'text-primary' : 'text-accent'} style={{fontSize: '1.5rem', fontWeight: 'bold'}}>
                     {person.balance >= 0 ? '+' : ''}₹{person.balance.toLocaleString()}
                   </div>
+                  {person.mobile && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendWhatsAppReport(person.name, person.mobile);
+                      }}
+                      className="btn btn-primary"
+                      style={{marginTop: '16px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.875rem', padding: '10px'}}
+                      title="Send report on WhatsApp"
+                    >
+                      <MessageSquare size={16} /> Send Report
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1556,28 +1704,12 @@ export default function App() {
               </button>
             </div>
             <div className="modal-body">
-              <div className="tab-group">
+              {/* <div className="tab-group">
                  <button className={`tab-btn ${syncTab === 'manual' ? 'active' : ''}`} onClick={() => setSyncTab('manual')}>Manual (Apps Script)</button>
                  <button className={`tab-btn ${syncTab === 'google' ? 'active' : ''}`} onClick={() => setSyncTab('google')}>Google Login</button>
-              </div>
+              </div> */}
 
-              {syncTab === 'manual' ? (
-                <>
-                  <div className="form-group">
-                    <label className="form-label">Google Apps Script Web App URL</label>
-                    <input 
-                      type="text" 
-                      placeholder="https://script.google.com/macros/s/..." 
-                      value={googleSheetUrl} 
-                      onChange={e => setGoogleSheetUrl(e.target.value)} 
-                      className="form-input" 
-                    />
-                    <p style={{fontSize: '0.75rem', color: 'rgba(29,22,22,0.6)', marginTop: '4px'}}>
-                      Deploy your script as "Anyone" to allow access.
-                    </p>
-                  </div>
-                </>
-              ) : (
+              {(
                 <>
                   <div className="form-group">
                     <label className="form-label">Client ID (Required)</label>
@@ -1678,23 +1810,43 @@ export default function App() {
                 
                 {showNameSuggestions && (
                   <ul className="autocomplete-list">
-                    {suggestedNames.map(name => (
-                      <li 
-                        key={name} 
-                        onMouseDown={() => {
-                          setFormData({...formData, name: name});
-                          setShowNameSuggestions(false);
-                        }}
-                        className="autocomplete-item"
-                      >
-                         <div style={{width: '24px', height: '24px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold'}}>
-                          {name.charAt(0).toUpperCase()}
-                        </div>
-                        {name}
-                      </li>
-                    ))}
+                    {suggestedNames.map(name => {
+                      // Find the most recent mobile number for this person
+                      const personTransaction = transactions.find(t => t.name.trim() === name && t.mobile);
+                      const mobile = personTransaction?.mobile || '';
+                      
+                      return (
+                        <li 
+                          key={name} 
+                          onMouseDown={() => {
+                            setFormData({...formData, name: name, mobile: mobile});
+                            setShowNameSuggestions(false);
+                          }}
+                          className="autocomplete-item"
+                        >
+                           <div style={{width: '24px', height: '24px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold'}}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                          <div style={{display: 'flex', flexDirection: 'column'}}>
+                            <span>{name}</span>
+                            {mobile && <span style={{fontSize: '0.75rem', color: 'var(--color-brand)'}}>{mobile}</span>}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Mobile Number (Optional)</label>
+                <input 
+                  type="tel" 
+                  placeholder="+91 99999 99999" 
+                  value={formData.mobile} 
+                  onChange={e => setFormData({...formData, mobile: e.target.value})} 
+                  className="form-input" 
+                />
               </div>
 
               <div className="toggle-group">
