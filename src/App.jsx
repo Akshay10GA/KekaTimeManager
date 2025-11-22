@@ -222,7 +222,7 @@ body {
 }
 .stat-card.lent { border-color: var(--color-primary); }
 .stat-card.borrowed { border-color: var(--color-accent); }
-.stat-card.net { border-color: var(--color-brand); }
+.stat-card.net { border-color: #cd0e0e; }
 
 .stat-header {
   display: flex;
@@ -238,7 +238,7 @@ body {
 }
 .stat-icon.lent { background: var(--color-primary); color: #fff; }
 .stat-icon.borrowed { background: var(--color-accent); color: #fff; }
-.stat-icon.net { background: var(--color-bg); color: var(--color-primary); }
+.stat-icon.net { background: #cd0e0e; }
 
 .stat-label {
   font-size: 0.875rem;
@@ -1264,13 +1264,13 @@ export default function App() {
     message += `📅 *Period:* ${personTransactions[0].date} to ${personTransactions[personTransactions.length - 1].date}\n\n`;
     message += `💰 *Summary:*\n`;
     message += `   • Total Lent: ₹${totalLent.toLocaleString()}\n`;
-    message += `   • Total Returned: ₹${totalReturned.toLocaleString()}\n`;
+    message += `   • Total Recovered: ₹${totalReturned.toLocaleString()}\n`;
     message += `   • Balance: ${balance >= 0 ? '+' : ''}₹${balance.toLocaleString()}\n\n`;
     message += `📋 *Transaction Details:*\n\n`;
 
     personTransactions.forEach((t, idx) => {
       message += `${idx + 1}. *${t.date}*\n`;
-      message += `   Type: ${t.type === 'lent' ? '📤 Lent' : '📥 Returned'}\n`;
+      message += `   Type: ${t.type === 'lent' ? '📤 Lent' : '📥 Recovered'}\n`;
       message += `   Amount: ₹${t.amount.toLocaleString()}\n`;
       if (t.note) message += `   Note: ${t.note}\n`;
       message += `\n`;
@@ -1353,7 +1353,7 @@ export default function App() {
               <div className="stat-icon lent"><ArrowUpRight size={20} /></div>
               <span className="stat-label">Total Spend</span>
             </div>
-            <div className="stat-value text-primary">₹{stats.lent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <div className="stat-value text-primary">₹{stats.lent.toLocaleString(undefined, { minimumFractionDigits: 0 })}</div>
           </div>
         </div>
 
@@ -1363,7 +1363,7 @@ export default function App() {
               <div className="stat-icon borrowed"><ArrowDownLeft size={20} /></div>
               <span className="stat-label">{stats.lent > stats.borrowed ? 'Recovered' : 'In Debt'}</span>
             </div>
-            <div className="stat-value text-accent">₹{stats.borrowed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <div className="stat-value text-accent">₹{stats.borrowed.toLocaleString(undefined, { minimumFractionDigits: 0 })}</div>
           </div>
         </div>
 
@@ -1371,10 +1371,10 @@ export default function App() {
           <div className="card-body">
             <div className="stat-header">
               <div className="stat-icon net"><Wallet size={20} /></div>
-              <span className="stat-label">Net Position</span>
+              <span className="stat-label">Lented</span>
             </div>
-            <div className={`stat-value ${stats.net >= 0 ? 'text-primary' : 'text-accent'}`}>
-              {stats.net >= 0 ? '+' : ''}₹{stats.net.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            <div className={`stat-value ${stats.net >= 0 ? 'text-brand' : 'text-accent'}`}>
+              {stats.net >= 0 ? '-' : ''}₹{stats.net.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
           </div>
         </div>
@@ -1571,7 +1571,7 @@ export default function App() {
                          <td className="text-primary" style={{fontWeight: 'bold'}}>{t.name}</td>
                          <td>
                            <span className={`badge ${t.type}`}>
-                            {t.type === 'lent' ? 'Lent' : 'Returned'}
+                            {t.type === 'lent' ? 'Lented' : 'Recovered'}
                            </span>
                          </td>
                          <td className={t.type === 'lent' ? 'text-primary' : 'text-accent'} style={{textAlign: 'right', fontWeight: 'bold'}}>
@@ -1609,7 +1609,7 @@ export default function App() {
                          <p className="trans-date">{t.date}</p>
                        </div>
                        <span className={`badge ${t.type}`}>
-                        {t.type === 'lent' ? 'Lent' : 'Returned'}
+                        {t.type === 'lent' ? 'Lent' : 'Recovered'}
                        </span>
                      </div>
                      <div className="trans-footer">
