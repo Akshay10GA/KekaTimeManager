@@ -26,7 +26,8 @@ import {
   ShieldAlert,
   ExternalLink,
   Phone,
-  MessageSquare
+  MessageSquare,
+  HelpCircle
 } from 'lucide-react';
 
 // --- Embedded CSS Styles ---
@@ -717,6 +718,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const [activeSyncModalTab, setActiveSyncModalTab] = useState('settings');
   const [viewImage, setViewImage] = useState(null); 
   const [searchTerm, setSearchTerm] = useState('');
   const [notification, setNotification] = useState(null);
@@ -1707,12 +1709,13 @@ export default function App() {
               </button>
             </div>
             <div className="modal-body">
-              {/* <div className="tab-group">
-                 <button className={`tab-btn ${syncTab === 'manual' ? 'active' : ''}`} onClick={() => setSyncTab('manual')}>Manual (Apps Script)</button>
-                 <button className={`tab-btn ${syncTab === 'google' ? 'active' : ''}`} onClick={() => setSyncTab('google')}>Google Login</button>
-              </div> */}
+              {/* Tabs */}
+              <div className="tab-group">
+                 <button className={`tab-btn ${activeSyncModalTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveSyncModalTab('settings')}>Settings</button>
+                 <button className={`tab-btn ${activeSyncModalTab === 'help' ? 'active' : ''}`} onClick={() => setActiveSyncModalTab('help')}>Help & Setup</button>
+              </div>
 
-              {(
+              {activeSyncModalTab === 'settings' ? (
                 <>
                   <div className="form-group">
                     <label className="form-label">Client ID (Required)</label>
@@ -1743,33 +1746,79 @@ export default function App() {
                        <Check size={14} /> Session Active
                     </div>
                   )}
-                </>
-              )}
-              
-              <div className="toggle-group" style={{marginTop: '12px'}}>
-                <button 
-                  onClick={() => handleSync('pull')} 
-                  className="btn btn-block" 
-                  style={{background: 'var(--color-bg)', color: 'var(--color-primary)', flexDirection: 'column', height: '100px', gap: '8px'}}
-                  disabled={isSyncing}
-                >
-                  {isSyncing ? <RefreshCw className="spinner" /> : <ArrowDownLeft size={32} />}
-                  PULL (Load from Cloud)
-                </button>
-                <button 
-                  onClick={() => handleSync('push')} 
-                  className="btn btn-block" 
-                  style={{background: 'var(--color-brand)', color: 'white', flexDirection: 'column', height: '100px', gap: '8px'}}
-                  disabled={isSyncing}
-                >
-                  {isSyncing ? <RefreshCw className="spinner" /> : <ArrowUpRight size={32} />}
-                  PUSH (Save to Cloud)
-                </button>
-              </div>
-              {syncTab === 'google' && (
-                  <p style={{textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '8px'}}>
+                  
+                  <div className="toggle-group" style={{marginTop: '12px'}}>
+                    <button 
+                      onClick={() => handleSync('pull')} 
+                      className="btn btn-block" 
+                      style={{background: 'var(--color-bg)', color: 'var(--color-primary)', flexDirection: 'column', height: '100px', gap: '8px'}}
+                      disabled={isSyncing}
+                    >
+                      {isSyncing ? <RefreshCw className="spinner" /> : <ArrowDownLeft size={32} />}
+                      PULL (Load from Cloud)
+                    </button>
+                    <button 
+                      onClick={() => handleSync('push')} 
+                      className="btn btn-block" 
+                      style={{background: 'var(--color-brand)', color: 'white', flexDirection: 'column', height: '100px', gap: '8px'}}
+                      disabled={isSyncing}
+                    >
+                      {isSyncing ? <RefreshCw className="spinner" /> : <ArrowUpRight size={32} />}
+                      PUSH (Save to Cloud)
+                    </button>
+                  </div>
+                   <p style={{textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '8px'}}>
                     Auto-creates "LedgerLink_DB" spreadsheet in your Drive.
                   </p>
+                </>
+              ) : (
+                <div style={{fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--color-primary)'}}>
+                   <h4 style={{fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                     <HelpCircle size={18} /> How to get Client ID?
+                   </h4>
+                   <ol style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                     <li>
+                       Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" style={{color: 'var(--color-brand)', fontWeight: 'bold'}}>Google Cloud Console</a> and sign in.
+                     </li>
+                     <li>
+                       Create a <strong>New Project</strong> (e.g., named "Ledger App").
+                     </li>
+                     <li>
+                       Navigate to <strong>APIs & Services {'>'} Library</strong> and enable these two APIs:
+                        <ul style={{paddingLeft: '20px', marginTop: '4px', listStyleType: 'circle', color: 'rgba(29,22,22,0.7)'}}>
+                           <li>Google Sheets API</li>
+                           <li>Google Drive API</li>
+                        </ul>
+                     </li>
+                     <li>
+                       Go to <strong>OAuth consent screen</strong>:
+                        <ul style={{paddingLeft: '20px', marginTop: '4px', listStyleType: 'circle', color: 'rgbaZb(29,22,22,0.7)'}}>
+                           <li>Select <strong>External</strong> User Type.</li>
+                           <li>Fill in App Name & Support Email.</li>
+                           <li><strong>Important:</strong> Add your own email to <strong>Test Users</strong>.</li>
+                        </ul>
+                     </li>
+                     <li>
+                       Go to <strong>Credentials {'>'} Create Credentials {'>'} OAuth client ID</strong>.
+                     </li>
+                     <li>
+                       Select <strong>Web application</strong> as Application type.
+                     </li>
+                     <li>
+                       Under <strong>Authorized JavaScript origins</strong>, click "ADD URI" and paste this exact URL:
+                       <div style={{background: '#EEEEEE', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all'}}>
+                         {window.location.origin}
+                       </div>
+                       <span style={{fontSize: '0.75rem', color: 'var(--color-brand)'}}>(Note: If using localhost, ensure the port matches)</span>
+                     </li>
+                     <li>
+                       Click <strong>Create</strong>. Copy the <strong>Client ID</strong> and paste it in the Settings tab.
+                     </li>
+                     <li>
+                        <strong>Important:</strong> Don't forget to Publish the app from audience settings to make it available for your test users.
+                     </li>
+                   </ol>
+                </div>
               )}
             </div>
           </div>
