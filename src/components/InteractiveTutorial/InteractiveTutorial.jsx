@@ -89,6 +89,10 @@ const steps = [
   const handleJoyrideCallback = (data) => {
     const { index, type, status } = data;
 
+    if (index === 1 && type === "step:before") {
+        setShowKekaCalculator(true)
+    }
+
     // Open menu during step 3
     if (index === 7 && type === "step:before") {
       setShowMenu(true);
