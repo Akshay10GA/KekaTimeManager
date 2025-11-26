@@ -8,13 +8,12 @@ import ToggleSelector from "../components/ToggleSelector/ToggleSelector";
 import { Backgrounds } from "../Background";
 import NewQuiz from "../components/Quiz/NewQuiz";
 
-const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCalculator}) => {
+const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCalculator, showQuiz, setShowQuiz}) => {
   const [renderer, setRenderer] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
   const [breakTimeApplicable, setBreakTimeApplicable] = useState(true);
   const [shiftEnded, setShiftEnded] = useState(false);
-  const [showQuiz, setShowQuiz] = useState(false);
   let [inputValue, setInputValue] = useState("");
   const [responseData, setResponseData] = useState(null);
   const [currentHour, setCurrentHour] = useState(0);
@@ -222,14 +221,6 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
     r.style.setProperty("--bar-percentage", completedPercentage);
   };
 
-  const changeBackground = (newTheme) => {
-    const theme = localStorage.getItem("canvasTheme");
-    if (theme != newTheme) {
-      localStorage.setItem("canvasTheme", newTheme);
-      setRefresh(refresh => !refresh);
-    }
-  };
-
   useEffect(() => {
     document.addEventListener("keydown", handleEnterPress);
     if (estimateFinishTime == "" && (currentHour > 0 || currentMinutes > 0) && !shiftEnded) {
@@ -339,82 +330,8 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
           </div>
         </div>
       )}
-      <ToggleSelector
-        key={"default-editor"}
-        onTabChange={toggleView}
-        tabs={["Default", "Select"]}
-        right={"0px"}
-        selectedTab={
-          JSON.parse(localStorage.getItem("useDefault")) ? "default" : "select"
-        }
-      />
-      <ToggleSelector
-        key={"view-editor"}
-        onTabChange={toggleView}
-        tabs={["All", "Canvas"]}
-        selectedTab={
-          showKekaCalculator ? "all" : "canvas"
-        }
-      />
       {showKekaCalculator && (
-        <div 
-          className="tab-selector-container quiz-toggle-container"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-450%)',
-            margin: '10px',
-            width: 'fit-content',
-            height: 'fit-content',
-            background: '#343434',
-            display: 'flex',
-            borderRadius: '50px',
-            pointerEvents: 'all',
-            cursor: 'pointer',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            onClick={() => setShowQuiz(false)}
-            className={!showQuiz ? 'active-tab' : ''}
-            style={{
-              minWidth: '50px',
-              margin: '5px',
-              padding: '5px 10px',
-              borderRadius: '50px',
-            }}
-          >
-            Calculator
-          </div>
-          <div
-            onClick={() => setShowQuiz(true)}
-            className={showQuiz ? 'active-tab' : ''}
-            style={{
-              minWidth: '50px',
-              margin: '5px',
-              padding: '5px 10px',
-              borderRadius: '50px',
-            }}
-          >
-            Quiz
-          </div>
-        </div>
-      )}
-      {!showKekaCalculator && (
-        <div className="background-options">
-          {Object.entries(Backgrounds).map(([key, value]) => (
-            <>
-              {
-                <button key={key} onClick={() => changeBackground(value)}>
-                  <strong>{key}</strong>
-                </button>
-              }
-            </>
-          ))}
-        </div>
-      )}
-      {showKekaCalculator && (
-        <div className={`${!dataLoaded ? "loader-active" : ""}`}>
+        <div className={`${!dataLoaded ? "loader-active" : ""}`} >
           <ProgressBar /> <br /> <br /> <br />
           <Cards
             showInfo={showInfo}
@@ -431,7 +348,7 @@ const KekaTimeManager = ({refresh, setRefresh, showKekaCalculator, setShowKekaCa
             clockTime={clockTime}
           />
           {showQuiz ? (
-            <NewQuiz />
+            <NewQuiz setShowQuiz={setShowQuiz}/>
           ) : (
             <>
               <TimeInput onInputChange={handleChange} />

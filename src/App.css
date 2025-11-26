@@ -9,15 +9,17 @@
   text-align: center;
   width: 100vw;
   height: 100vh;
-  background: white;
+  overflow: hidden;
+  background: black;
 }
 .app {
   position: absolute;
   top: 0px;
   color: white;
   z-index: 100;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -39,4 +41,29 @@
   color: white;
   cursor: pointer;
   pointer-events: all;
+}
+
+.joyride-overlay {
+  pointer-events: none !important; /* allow overlay to catch clicks */
+}
+
+.joyride-hole {
+  pointer-events: none !important; /* allow tooltip interactions only */
+}
+
+body.joyride-block {
+  pointer-events: none !important; /* block page clicks */
+}
+
+body.joyride-block .react-joyride__tooltip {
+  pointer-events: auto !important; /* allow tooltip interaction */
+}
+
+/* Make overlay block clicks outside the tooltip */
+.react-joyride__overlay {
+  pointer-events: none !important; /* allow overlay to capture clicks */
+}
+
+.react-joyride__spotlight {
+  pointer-events: none !important; /* allow overlay to capture clicks */
 }

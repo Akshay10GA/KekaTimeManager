@@ -21,7 +21,7 @@ const Cards = ({
     <div className="cards-container">
       <div className="cards-inner-container">
         {/* Left Card */}
-        <div className="main-box-container">
+        <div className="main-box-container joyride-blue-clock-position">
           <div className="box-container">
             <img src={blueClockImg} />
             <h3>Your Time</h3>
@@ -72,7 +72,7 @@ const Cards = ({
         </div>
 
         {/* Right Card */}
-        <div className="main-box-container red-clock-position">
+        <div className="main-box-container red-clock-position joyride-red-clock-position">
           <div className="box-container-2">
             <img src={redClockImg} />
             <h3>Break Time</h3>

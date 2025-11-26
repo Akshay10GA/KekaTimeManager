@@ -3,7 +3,7 @@ import "./ProgressBar.css";
 
 const ProgressBar = () => {
   return (
-    <section className="progress-section">
+    <section className="progress-section joyride-progress-bar">
       <div className="progress-container">
         <div className="progress" id="progress"></div>
         <div id="0per" className="circle active">

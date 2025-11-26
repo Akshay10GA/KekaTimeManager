@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import './NewQuiz.css';
-import { quizData } from './quizData';
+import React, { useState, useEffect } from "react";
+import "./NewQuiz.css";
+import { quizData } from "./quizData";
 
-const NewQuiz = () => {// States: menu, playing, gameover, leaderboard
-  const [gameState, setGameState] = useState('menu'); 
-  
+const NewQuiz = ({setShowQuiz}) => {
+  // States: menu, playing, gameover, leaderboard
+  const [gameState, setGameState] = useState("menu");
+
   // Load last username from storage
   const [userName, setUserName] = useState(() => {
-    return localStorage.getItem('quizLastUser') || '';
+    return localStorage.getItem("quizLastUser") || "";
   });
-  
-  const [category, setCategory] = useState('');
+
+  const [category, setCategory] = useState("");
   const [finalScore, setFinalScore] = useState(0);
 
   const startGame = (selectedCategory) => {
@@ -18,54 +19,53 @@ const NewQuiz = () => {// States: menu, playing, gameover, leaderboard
       alert("Identify yourself, User.");
       return;
     }
-    localStorage.setItem('quizLastUser', userName);
+    localStorage.setItem("quizLastUser", userName);
     setCategory(selectedCategory);
-    setGameState('playing');
+    setGameState("playing");
   };
 
   const endGame = (score) => {
     setFinalScore(score);
-    setGameState('gameover');
+    setGameState("gameover");
   };
 
   const resetGame = () => {
-    setGameState('menu');
-    setCategory('');
+    setGameState("menu");
+    setCategory("");
     setFinalScore(0);
   };
 
   return (
     <div className="quiz-widget-wrapper">
       <div className="quiz-content fade-in">
-        {gameState === 'menu' && (
-          <MenuScreen 
-            userName={userName} 
-            setUserName={setUserName} 
-            onStart={startGame} 
-            onViewLeaderboard={() => setGameState('leaderboard')} // New Handler
-          />
-        )}
-        
-        {gameState === 'leaderboard' && (
-          <LeaderboardScreen 
-            onBack={() => setGameState('menu')} 
-          />
-        )}
-
-        {gameState === 'playing' && (
-          <QuizScreen 
+        {gameState === "menu" && (
+          <MenuScreen
             userName={userName}
-            category={category} 
-            onGameEnd={endGame} 
+            setUserName={setUserName}
+            onStart={startGame}
+            onViewLeaderboard={() => setGameState("leaderboard")} // New Handler
+            setShowQuiz={setShowQuiz}
           />
         )}
 
-        {gameState === 'gameover' && (
-          <GameOverScreen 
-            score={finalScore} 
+        {gameState === "leaderboard" && (
+          <LeaderboardScreen onBack={() => setGameState("menu")} />
+        )}
+
+        {gameState === "playing" && (
+          <QuizScreen
             userName={userName}
             category={category}
-            onReset={resetGame} 
+            onGameEnd={endGame}
+          />
+        )}
+
+        {gameState === "gameover" && (
+          <GameOverScreen
+            score={finalScore}
+            userName={userName}
+            category={category}
+            onReset={resetGame}
           />
         )}
       </div>
@@ -74,35 +74,73 @@ const NewQuiz = () => {// States: menu, playing, gameover, leaderboard
 };
 
 // --- Component: Menu Screen ---
-const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard }) => {
+const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShowQuiz }) => {
   return (
-    <div style={{ width: '100%', textAlign: 'center' }}>
-      <h2>System Login</h2>
-      <input 
-        type="text" 
-        className="input-field" 
-        placeholder="ENTER USER" 
+    <div style={{ width: "100%", textAlign: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          padding: "10px 0",
+        }}
+      >
+        {/* Centered Title */}
+        <h2 style={{ margin: 0, textAlign: "center" }}>System Login</h2>
+
+        {/* Close Button */}
+        <button
+          style={{
+            position: "absolute",
+            right: "20px",
+            top: "45%",
+            transform: "translateY(-50%)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "20px",
+            color: "white",
+          }}
+          onClick={()=>setShowQuiz(false)} // optional
+        >
+          ✕
+        </button>
+      </div>
+
+      <input
+        type="text"
+        className="input-field"
+        placeholder="ENTER USER"
         value={userName}
         autoComplete="off"
         onChange={(e) => setUserName(e.target.value)}
       />
-      <p style={{ color: '#a0a0a0', marginBottom: '15px', fontSize:'0.8rem' }}>SELECT QUESTION SET</p>
-      
+      <p style={{ color: "#a0a0a0", marginBottom: "15px", fontSize: "0.8rem" }}>
+        SELECT QUESTION SET
+      </p>
+
       <div className="category-grid">
         {Object.keys(quizData).map((cat) => (
-          <button 
-            key={cat} 
-            className="btn" 
-            onClick={() => onStart(cat)}
-          >
+          <button key={cat} className="btn" onClick={() => onStart(cat)}>
             {cat}
           </button>
         ))}
       </div>
 
       {/* New Leaderboard Button */}
-      <div style={{ marginTop: '20px', borderTop: '1px solid var(--glass-border)', paddingTop: '15px' }}>
-        <button className="btn btn-secondary" style={{ width: '100%' }} onClick={onViewLeaderboard}>
+      <div
+        style={{
+          marginTop: "20px",
+          borderTop: "1px solid var(--glass-border)",
+          paddingTop: "15px",
+        }}
+      >
+        <button
+          className="btn btn-secondary"
+          style={{ width: "100%" }}
+          onClick={onViewLeaderboard}
+        >
           ACCESS RECORDS (HIGHSCORES)
         </button>
       </div>
@@ -118,28 +156,38 @@ const LeaderboardScreen = ({ onBack }) => {
 
   useEffect(() => {
     // 1. Load all scores
-    const storedScores = JSON.parse(localStorage.getItem('quizHighScores')) || [];
-    
+    const storedScores =
+      JSON.parse(localStorage.getItem("quizHighScores")) || [];
+
     // 2. Filter by active tab (category)
-    const filtered = storedScores.filter(s => s.category === activeTab);
-    
+    const filtered = storedScores.filter((s) => s.category === activeTab);
+
     // 3. Sort
     filtered.sort((a, b) => b.score - a.score);
-    
+
     // 4. Take top 10
     setHighScores(filtered.slice(0, 10));
   }, [activeTab]);
 
   return (
-    <div className="fade-in" style={{ width: '100%', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div
+      className="fade-in"
+      style={{
+        width: "100%",
+        textAlign: "center",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <h3 style={{ marginTop: 0 }}>DATABASE RECORDS</h3>
-      
+
       {/* Category Filter Tabs */}
       <div className="filter-tabs">
-        {categories.map(cat => (
-          <button 
-            key={cat} 
-            className={`tab-btn ${activeTab === cat ? 'active' : ''}`}
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={`tab-btn ${activeTab === cat ? "active" : ""}`}
             onClick={() => setActiveTab(cat)}
           >
             {cat.toUpperCase()}
@@ -148,27 +196,36 @@ const LeaderboardScreen = ({ onBack }) => {
       </div>
 
       {/* Table Container - flex-1 to take up remaining space with scrolling */}
-      <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
+      <div style={{ flex: 1, overflowY: "auto", width: "100%" }}>
         <table className="highscore-table">
           <thead>
             <tr>
               <th>RNK</th>
               <th>AGENT</th>
-              <th style={{ textAlign: 'right' }}>PTS</th>
+              <th style={{ textAlign: "right" }}>PTS</th>
             </tr>
           </thead>
           <tbody>
             {highScores.length > 0 ? (
               highScores.map((entry, index) => (
                 <tr key={index}>
-                  <td style={index === 0 ? { color: '#ffd700' } : {}}>#{index + 1}</td>
+                  <td style={index === 0 ? { color: "#ffd700" } : {}}>
+                    #{index + 1}
+                  </td>
                   <td>{entry.name}</td>
-                  <td style={{ textAlign: 'right' }}>{entry.score}</td>
+                  <td style={{ textAlign: "right" }}>{entry.score}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" style={{ textAlign: 'center', color: '#a0a0a0', padding: '30px 0' }}>
+                <td
+                  colSpan="3"
+                  style={{
+                    textAlign: "center",
+                    color: "#a0a0a0",
+                    padding: "30px 0",
+                  }}
+                >
                   NO ENTRIES FOUND
                 </td>
               </tr>
@@ -177,8 +234,12 @@ const LeaderboardScreen = ({ onBack }) => {
         </table>
       </div>
 
-      <div style={{ marginTop: '15px' }}>
-        <button className="btn btn-secondary" style={{ width: '100%' }} onClick={onBack}>
+      <div style={{ marginTop: "15px" }}>
+        <button
+          className="btn btn-secondary"
+          style={{ width: "100%" }}
+          onClick={onBack}
+        >
           RETURN TO MENU
         </button>
       </div>
@@ -218,7 +279,7 @@ const QuizScreen = ({ category, onGameEnd }) => {
 
   useEffect(() => {
     if (isAnswerProcessed) return;
-    
+
     if (timeLeft === 0) {
       handleTimeout();
       return;
@@ -268,29 +329,36 @@ const QuizScreen = ({ category, onGameEnd }) => {
     }
   };
 
-  if (questions.length === 0 || shuffledOptions.length === 0) return <div>Initializing Data...</div>;
+  if (questions.length === 0 || shuffledOptions.length === 0)
+    return <div>Initializing Data...</div>;
 
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
-    <div className="fade-in" style={{ width: '100%' }}>
+    <div className="fade-in" style={{ width: "100%" }}>
       <div className="stats-bar">
         <span>PTS: {score}</span>
-        <span className={`timer ${timeLeft <= 5 ? 'danger' : ''}`}>
+        <span className={`timer ${timeLeft <= 5 ? "danger" : ""}`}>
           T-{timeLeft}s
         </span>
-        <span style={{ color: '#ff003c', textShadow: '0 0 5px #ff003c', transform: 'scale(1.8)' }}>
-          {'♥'.repeat(lives)}
+        <span
+          style={{
+            color: "#ff003c",
+            textShadow: "0 0 5px #ff003c",
+            transform: "scale(1.8)",
+          }}
+        >
+          {"♥".repeat(lives)}
         </span>
       </div>
 
       <div className="question-section">
-        <p style={{ fontSize: '0.8rem', color: '#a0a0a0' }}>
+        <p style={{ fontSize: "0.8rem", color: "#a0a0a0" }}>
           QUERY {currentIndex + 1} / {questions.length}
         </p>
         <div className="question-text">{currentQuestion.question}</div>
-        
+
         <div className="options-list">
           {shuffledOptions.map((opt) => {
             let btnClass = "option-btn";
@@ -300,9 +368,9 @@ const QuizScreen = ({ category, onGameEnd }) => {
             }
 
             return (
-              <button 
-                key={opt} 
-                className={btnClass} 
+              <button
+                key={opt}
+                className={btnClass}
                 onClick={() => handleOptionClick(opt)}
                 disabled={isAnswerProcessed}
               >
@@ -316,31 +384,37 @@ const QuizScreen = ({ category, onGameEnd }) => {
       {isAnswerProcessed && (
         <div className="fade-in">
           <div className="explanation-box">
-             <div className="explanation-title">Explanation:</div>
-             <div className="explanation-text">
-               {currentQuestion.explanation || "No additional data available."}
-             </div>
+            <div className="explanation-title">Explanation:</div>
+            <div className="explanation-text">
+              {currentQuestion.explanation || "No additional data available."}
+            </div>
           </div>
 
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
             {lives === 0 ? (
-               <p style={{ color: '#ff003c', fontWeight: 'bold' }}>SYSTEM FAILURE: 0 LIVES REMAINING</p>
+              <p style={{ color: "#ff003c", fontWeight: "bold" }}>
+                SYSTEM FAILURE: 0 LIVES REMAINING
+              </p>
             ) : timeLeft === 0 ? (
-               <p style={{ color: '#ff003c' }}>TIME EXPIRED</p>
+              <p style={{ color: "#ff003c" }}>TIME EXPIRED</p>
             ) : (
-               <p style={{ color: '#00f3ff' }}>ANSWER RECORDED</p>
+              <p style={{ color: "#00f3ff" }}>ANSWER RECORDED</p>
             )}
 
-            <button 
-              className="btn" 
-              style={{ width: '100%', background: lives === 0 ? '#ff003c' : undefined, color: lives === 0 ? 'white' : undefined }} 
+            <button
+              className="btn"
+              style={{
+                width: "100%",
+                background: lives === 0 ? "#ff003c" : undefined,
+                color: lives === 0 ? "white" : undefined,
+              }}
               onClick={handleNextQuestion}
             >
-              {lives === 0 
-                ? "TERMINATE SESSION" 
-                : isLastQuestion 
-                  ? "COMPLETE MISSION" 
-                  : "NEXT QUESTION >>"}
+              {lives === 0
+                ? "TERMINATE SESSION"
+                : isLastQuestion
+                ? "COMPLETE MISSION"
+                : "NEXT QUESTION >>"}
             </button>
           </div>
         </div>
@@ -354,28 +428,30 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
   const [highScores, setHighScores] = useState([]);
 
   useEffect(() => {
-    const storedScores = JSON.parse(localStorage.getItem('quizHighScores')) || [];
-    
-    const newEntry = { 
-      name: userName, 
-      score: score, 
-      category: category, 
+    const storedScores =
+      JSON.parse(localStorage.getItem("quizHighScores")) || [];
+
+    const newEntry = {
+      name: userName,
+      score: score,
+      category: category,
       date: new Date().toLocaleDateString(),
-      timestamp: Date.now() // Add unique identifier
+      timestamp: Date.now(), // Add unique identifier
     };
 
     // Check if this exact score was already saved (prevent duplicates)
     const isDuplicate = storedScores.some(
-      entry => entry.name === userName && 
-               entry.score === score && 
-               entry.category === category && 
-               entry.date === newEntry.date
+      (entry) =>
+        entry.name === userName &&
+        entry.score === score &&
+        entry.category === category &&
+        entry.date === newEntry.date
     );
 
     let allScores = storedScores;
     if (!isDuplicate) {
       allScores = [...storedScores, newEntry];
-      localStorage.setItem('quizHighScores', JSON.stringify(allScores));
+      localStorage.setItem("quizHighScores", JSON.stringify(allScores));
     }
 
     const categorySpecificScores = allScores.filter(
@@ -386,49 +462,77 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
     const top5 = categorySpecificScores.slice(0, 5);
 
     setHighScores(top5);
-
   }, []);
 
   return (
-    <div className="fade-in" style={{ width: '100%', textAlign: 'center' }}>
-      <h2 style={{ color: '#ff003c', textShadow: '0 0 10px #ff003c' }}>SESSION ENDED</h2>
-      
-      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-        <p style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#a0a0a0' }}>
+    <div className="fade-in" style={{ width: "100%", textAlign: "center" }}>
+      <h2 style={{ color: "#ff003c", textShadow: "0 0 10px #ff003c" }}>
+        SESSION ENDED
+      </h2>
+
+      <div
+        style={{
+          background: "rgba(255,255,255,0.05)",
+          padding: "15px",
+          borderRadius: "10px",
+          marginBottom: "20px",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: "0.8rem",
+            textTransform: "uppercase",
+            color: "#a0a0a0",
+          }}
+        >
           {category} / Final Score
         </p>
-        <h1 style={{ margin: '10px 0', fontSize: '3rem', color: '#fff' }}>{score}</h1>
+        <h1 style={{ margin: "10px 0", fontSize: "3rem", color: "#fff" }}>
+          {score}
+        </h1>
       </div>
-      
-      <h3 style={{ fontSize: '1rem' }}>{category.toUpperCase()} LEADERBOARD</h3>
-      
+
+      <h3 style={{ fontSize: "1rem" }}>{category.toUpperCase()} LEADERBOARD</h3>
+
       <table className="highscore-table">
         <thead>
           <tr>
             <th>RNK</th>
             <th>AGENT</th>
-            <th style={{ textAlign: 'right' }}>PTS</th>
+            <th style={{ textAlign: "right" }}>PTS</th>
           </tr>
         </thead>
         <tbody>
           {highScores.length > 0 ? (
             highScores.map((entry, index) => (
-              <tr 
-                key={index} 
+              <tr
+                key={index}
                 style={
-                  entry.name === userName && entry.score === score 
-                    ? { color: '#00f3ff', textShadow: '0 0 5px rgba(0,243,255,0.5)', fontWeight: 'bold' } 
+                  entry.name === userName && entry.score === score
+                    ? {
+                        color: "#00f3ff",
+                        textShadow: "0 0 5px rgba(0,243,255,0.5)",
+                        fontWeight: "bold",
+                      }
                     : {}
                 }
               >
                 <td>{index + 1}</td>
                 <td>{entry.name}</td>
-                <td style={{ textAlign: 'right' }}>{entry.score}</td>
+                <td style={{ textAlign: "right" }}>{entry.score}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="3" style={{ textAlign: 'center', color: '#a0a0a0', padding: '20px' }}>
+              <td
+                colSpan="3"
+                style={{
+                  textAlign: "center",
+                  color: "#a0a0a0",
+                  padding: "20px",
+                }}
+              >
                 NO DATA FOUND
               </td>
             </tr>
@@ -436,8 +540,10 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
         </tbody>
       </table>
 
-      <div style={{ marginTop: '25px' }}>
-        <button className="btn" style={{ width: '100%' }} onClick={onReset}>BACK</button>
+      <div style={{ marginTop: "25px" }}>
+        <button className="btn" style={{ width: "100%" }} onClick={onReset}>
+          BACK
+        </button>
       </div>
     </div>
   );

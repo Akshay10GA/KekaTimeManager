@@ -16,7 +16,6 @@ const AppCanvas = ({refresh}) => {
 
   useEffect(() => {
     setTheme(localStorage.getItem("canvasTheme"));
-    console.log(localStorage.getItem("canvasTheme"));
   },[refresh]);
 
   return (
