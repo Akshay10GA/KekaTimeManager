@@ -9,11 +9,92 @@
   width: 50% !important;
 }
 
-.input-field {
+/* Wrapper to hold input and border spans relative to each other */
+.input-container {
+  position: relative;
   width: 40vw;
   height: 6vh;
+}
+
+.input-field {
+  width: 100%;
+  height: 100%;
+  /* Remove default border so our custom border shines */
+  border: 1px solid #333; 
   border-radius: 10px;
   background-color: #000000;
   color: aqua !important;
   text-align: center;
+  outline: none;
+  /* Ensure padding doesn't affect width */
+  box-sizing: border-box; 
+  transition: border-color 0.3s;
+}
+
+/* Hide the grey border when focused so only neon shows */
+.input-field:focus {
+  border-color: transparent;
+}
+
+/* --- Border Animation Logic --- */
+
+.input-container span {
+  position: absolute;
+  background-color: #00ffff; /* Neon Cyan */
+  box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff; /* Neon Glow */
+  transition: transform 0.4s ease-out;
+  pointer-events: none; /* Let clicks pass through to input */
+  z-index: 1;
+}
+
+/* Top Border: Starts at center, expands horizontally */
+.border-top {
+  top: 0;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  transform: translateX(-50%) scaleX(0); /* Start hidden (scaled to 0 width) */
+  border-radius: 10px 10px 0 0; /* Match container radius roughly */
+}
+
+/* Bottom Border: Starts at center, expands horizontally */
+.border-bottom {
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  transform: translateX(-50%) scaleX(0);
+  border-radius: 0 0 10px 10px;
+}
+
+/* Left Border: Starts at center, expands vertically */
+.border-left {
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateY(-50%) scaleY(0); /* Start hidden (scaled to 0 height) */
+  border-radius: 10px 0 0 10px;
+}
+
+/* Right Border: Starts at center, expands vertically */
+.border-right {
+  top: 50%;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateY(-50%) scaleY(0);
+  border-radius: 0 10px 10px 0;
+}
+
+/* --- Trigger Animations on Focus --- */
+
+.input-field:focus ~ .border-top,
+.input-field:focus ~ .border-bottom {
+  transform: translateX(-50%) scaleX(1); /* Expand to full width */
+}
+
+.input-field:focus ~ .border-left,
+.input-field:focus ~ .border-right {
+  transform: translateY(-50%) scaleY(1); /* Expand to full height */
 }

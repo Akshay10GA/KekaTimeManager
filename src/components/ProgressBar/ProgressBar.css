@@ -1,47 +1,85 @@
 .progress-section {
   width: 100%;
-  height: fit-content;
-  position: absolute;
-  opacity: 0.7;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
 }
 
 .progress-container {
-  padding: 15px;
-  width: 50%;
-  min-width: 425px;
-  margin: auto;
+  position: relative;
+  width: 80%;
+  height: 12px; /* Slightly thicker for better neon effect */
+  background-color: #1a1a1a; /* Dark track background */
+  border-radius: 10px;
   display: flex;
-  gap: 40px;
-  justify-content: center;
   align-items: center;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  z-index: 1; /* Ensure it sits above background elements */
 }
 
+/* The moving fill bar */
 .progress {
-  position: absolute;
-  width: 375px;
-  height: 3px;
-  background: linear-gradient(
-    to right,
-    var(--line-border-fill) var(--bar-percentage),
-    var(--line-border-empty) 0 100%
-  );
-  z-index: -1;
+  background-color: #00ffff; /* Neon Cyan Fill */
+  height: 100%;
+  border-radius: 10px;
+  width: var(--bar-percentage, 0%); /* Default to 0 if var not set */
+  transition: width 0.5s ease-out;
+  
+  /* Neon Border & Glow */
+  border: 2px solid #fff; /* White core for "hot" neon look */
+  box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+  
+  /* Slow, relaxed blinking animation */
+  animation: neonBreathe 4s ease-in-out infinite;
 }
 
+/* Keyframes for the slow blinking/breathing effect */
+@keyframes neonBreathe {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+    border-color: #fff;
+  }
+  50% {
+    opacity: 0.7; /* Dim slightly */
+    box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff;
+    border-color: #ccffff;
+  }
+}
+
+/* Milestones (Circles) */
 .circle {
-  background: #413f3f;
-  color: #e6e6e6;
-  border-radius: 50%;
-  height: 50px;
-  width: 50px;
+  background-color: #333;
+  color: #888;
+  height: 35px;
+  width: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid var(--line-border-empty);
-  transition: 0.4s ease;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #444;
+  transition: all 0.4s ease;
+  z-index: 2;
 }
 
+/* Active Milestone State */
 .circle.active {
-  border-color: var(--line-border-fill);
-  background: #4c7d92;
+  border-color: #00ffff;
+  background-color: #000;
+  color: #00ffff;
+  box-shadow: 0 0 10px #00ffff;
+  text-shadow: 0 0 5px #00ffff;
 }
+
+/* Positioning the circles */
+#progress { z-index: 1; } /* Bar behind circles */
+div[id="0per"] { left: 0%; transform: translate(-50%, -50%); }
+div[id="25per"] { left: 25%; transform: translate(-50%, -50%); }
+div[id="50per"] { left: 50%; transform: translate(-50%, -50%); }
+div[id="75per"] { left: 75%; transform: translate(-50%, -50%); }
+div[id="100per"] { left: 100%; transform: translate(-50%, -50%); }

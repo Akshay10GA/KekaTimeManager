@@ -1,4 +1,3 @@
-// import React, { useState } from "react";
 import blueClockImg from "../../../assets/images/blueClock.png";
 import redClockImg from "../../../assets/images/redClock.png";
 import "./Cards.css";
@@ -7,63 +6,47 @@ const Cards = ({
   showInfo,
   shiftEnded,
   responseData,
-  currentHour,
-  currentMinutes,
-  currentSeconds,
-  estFinishHourNow,
-  breakTimeApplicable,
-  totalBreak,
-  lunchBreak,
-  otherBreak,
-  clockTime,
+  currentTime,
+  estFinishTime,
+  breakData
 }) => {
+  const { h, m } = currentTime;
+  const { breakTimeApplicable, totalBreak, lunchBreak, otherBreak } = breakData;
+
+  // Calculate remaining or overtime
+  const remainingH = 8 - h;
+  const remainingM = 60 - m;
+  const overtimeH = h - 9;
+  
   return (
     <div className="cards-container">
       <div className="cards-inner-container">
-        {/* Left Card */}
+        {/* Work Time Card */}
         <div className="main-box-container joyride-blue-clock-position">
           <div className="box-container">
-            <img src={blueClockImg} />
+            <img src={blueClockImg} alt="Blue Clock" />
             <h3>Your Time</h3>
             {showInfo && (
               <div className="my-time-container">
                 <span className="hour-headings">
-                  Completed Hours :{" "}
-                  {shiftEnded ? parseInt(responseData[0], 10) : currentHour}{" "}
-                  Hours,{" "}
-                  {shiftEnded ? parseInt(responseData[1], 10) : currentMinutes}{" "}
-                  Minutes{" "}
+                  Completed: {shiftEnded ? responseData[0] : h} Hours, {shiftEnded ? responseData[1] : m} Minutes
                 </span>
                 <br />
-                {currentHour < 9 && (
+                {h < 9 ? (
                   <span className="hour-headings">
-                    Remaining Hours :{" "}
-                    {shiftEnded
-                      ? 8 - parseInt(responseData[0], 10)
-                      : 8 - currentHour}{" "}
-                    Hours,{" "}
-                    {shiftEnded
-                      ? 60 - parseInt(responseData[1], 10)
-                      : 60 - currentMinutes}{" "}
-                    Minutes
+                    Remaining: {shiftEnded ? 8 - responseData[0] : remainingH} Hours, {shiftEnded ? 60 - responseData[1] : remainingM} Minutes
                   </span>
-                )}
-                {currentHour >= 9 && (
+                ) : (
                   <span className="hour-headings">
-                    Overtime Hours : {currentHour - 9} Hours, {currentMinutes}{" "}
-                    Minutes
+                    Overtime: {overtimeH} Hours, {m} Minutes
                   </span>
                 )}
                 <br />
                 {!shiftEnded && (
                   <>
-                    <span className="hour-headings">
-                      Completes At - {estFinishHourNow}
-                    </span>
+                    <span className="hour-headings">Completes At: {estFinishTime}</span>
                     <br />
-                    <span className="hour-headings">
-                      Current Time - {clockTime.toLocaleTimeString()}
-                    </span>
+                    <span className="hour-headings">Current Time: {new Date().toLocaleTimeString()}</span>
                   </>
                 )}
               </div>
@@ -71,30 +54,20 @@ const Cards = ({
           </div>
         </div>
 
-        {/* Right Card */}
+        {/* Break Time Card */}
         <div className="main-box-container red-clock-position joyride-red-clock-position">
           <div className="box-container-2">
-            <img src={redClockImg} />
+            <img src={redClockImg} alt="Red Clock" />
             <h3>Break Time</h3>
             {showInfo && (
               <div className="my-time-container">
-                {breakTimeApplicable && (
+                {breakTimeApplicable ? (
                   <>
-                    <span className="hour-headings">
-                      Total Break : {totalBreak}
-                    </span>
-                    <br />
-                    <span className="hour-headings">
-                      Lunch Break : {lunchBreak}
-                    </span>
-                    <br />
-                    <span className="hour-headings">
-                      Other Time : {otherBreak}
-                    </span>
-                    <br />
+                    <span className="hour-headings">Total Break: {totalBreak}</span><br />
+                    <span className="hour-headings">Lunch Break: {lunchBreak}</span><br />
+                    <span className="hour-headings">Other Time: {otherBreak}</span>
                   </>
-                )}
-                {!breakTimeApplicable && (
+                ) : (
                   <span className="hour-headings">No breaks taken</span>
                 )}
               </div>

@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./NewQuiz.css";
 import { quizData } from "./quizData";
 
-const NewQuiz = ({setShowQuiz}) => {
-  // States: menu, playing, gameover, leaderboard
+const NewQuiz = ({ setShowQuiz }) => {
   const [gameState, setGameState] = useState("menu");
 
-  // Load last username from storage
   const [userName, setUserName] = useState(() => {
     return localStorage.getItem("quizLastUser") || "";
   });
@@ -43,7 +41,7 @@ const NewQuiz = ({setShowQuiz}) => {
             userName={userName}
             setUserName={setUserName}
             onStart={startGame}
-            onViewLeaderboard={() => setGameState("leaderboard")} // New Handler
+            onViewLeaderboard={() => setGameState("leaderboard")}
             setShowQuiz={setShowQuiz}
           />
         )}
@@ -75,6 +73,20 @@ const NewQuiz = ({setShowQuiz}) => {
 
 // --- Component: Menu Screen ---
 const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShowQuiz }) => {
+  const [isConfirmed, setIsConfirmed] = useState(!!userName); // Auto-confirm if loaded from storage
+
+  const handleConfirm = () => {
+    if (userName.trim()) {
+      localStorage.setItem("quizLastUser", userName);
+      setIsConfirmed(true);
+    }
+  };
+
+  // Allow re-editing name
+  const handleEdit = () => {
+    setIsConfirmed(false);
+  };
+
   return (
     <div style={{ width: "100%", textAlign: "center" }}>
       <div
@@ -86,41 +98,84 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
           padding: "10px 0",
         }}
       >
-        {/* Centered Title */}
         <h2 style={{ margin: 0, textAlign: "center" }}>System Login</h2>
-
-        {/* Close Button */}
         <button
           style={{
             position: "absolute",
-            right: "20px",
-            top: "45%",
+            right: "0",
+            top: "50%",
             transform: "translateY(-50%)",
             background: "none",
             border: "none",
             cursor: "pointer",
             fontSize: "20px",
             color: "white",
+            padding: "5px 10px"
           }}
-          onClick={()=>setShowQuiz(false)} // optional
+          onClick={() => setShowQuiz(false)}
         >
           ✕
         </button>
       </div>
 
-      <input
-        type="text"
-        className="input-field"
-        placeholder="ENTER USER"
-        value={userName}
-        autoComplete="off"
-        onChange={(e) => setUserName(e.target.value)}
-      />
-      <p style={{ color: "#a0a0a0", marginBottom: "15px", fontSize: "0.8rem" }}>
+      {/* User Input Section */}
+      <div style={{ margin: "20px 0", display: "flex", gap: "10px", justifyContent: "center" }}>
+        {isConfirmed ? (
+          <div 
+            className="input-field" 
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between", 
+              color: "#00f3ff",
+              border: "1px solid #00f3ff",
+              cursor: "default"
+            }}
+          >
+            <span>AGENT: {userName}</span>
+            <span 
+              onClick={handleEdit} 
+              style={{ cursor: "pointer", fontSize: "12px", opacity: 0.7, marginLeft: "10px" }}
+            >
+              (EDIT)
+            </span>
+          </div>
+        ) : (
+          <div style={{ display: "flex", width: "100%", gap: "8px" }}>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="ENTER USERNAME"
+              value={userName}
+              autoComplete="off"
+              onChange={(e) => setUserName(e.target.value)}
+              style={{ flex: 1, margin: 0 }}
+              onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+            />
+            <button 
+              className="btn" 
+              onClick={handleConfirm}
+              style={{ padding: "0 15px", whiteSpace: "nowrap" }}
+            >
+              CONFIRM
+            </button>
+          </div>
+        )}
+      </div>
+
+      <p style={{ color: "#a0a0a0", marginBottom: "15px", fontSize: "0.8rem", opacity: isConfirmed ? 1 : 0.5 }}>
         SELECT QUESTION SET
       </p>
 
-      <div className="category-grid">
+      {/* Category Grid - Disabled until name is confirmed */}
+      <div 
+        className="category-grid" 
+        style={{ 
+          opacity: isConfirmed ? 1 : 0.4, 
+          pointerEvents: isConfirmed ? "all" : "none",
+          transition: "opacity 0.3s" 
+        }}
+      >
         {Object.keys(quizData).map((cat) => (
           <button key={cat} className="btn" onClick={() => onStart(cat)}>
             {cat}
@@ -128,7 +183,6 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
         ))}
       </div>
 
-      {/* New Leaderboard Button */}
       <div
         style={{
           marginTop: "20px",
@@ -148,24 +202,16 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
   );
 };
 
-// --- Component: Leaderboard Screen (NEW) ---
+// --- Component: Leaderboard Screen ---
 const LeaderboardScreen = ({ onBack }) => {
   const categories = Object.keys(quizData);
-  const [activeTab, setActiveTab] = useState(categories[0]); // Default to first category
+  const [activeTab, setActiveTab] = useState(categories[0]);
   const [highScores, setHighScores] = useState([]);
 
   useEffect(() => {
-    // 1. Load all scores
-    const storedScores =
-      JSON.parse(localStorage.getItem("quizHighScores")) || [];
-
-    // 2. Filter by active tab (category)
+    const storedScores = JSON.parse(localStorage.getItem("quizHighScores")) || [];
     const filtered = storedScores.filter((s) => s.category === activeTab);
-
-    // 3. Sort
     filtered.sort((a, b) => b.score - a.score);
-
-    // 4. Take top 10
     setHighScores(filtered.slice(0, 10));
   }, [activeTab]);
 
@@ -182,7 +228,6 @@ const LeaderboardScreen = ({ onBack }) => {
     >
       <h3 style={{ marginTop: 0 }}>DATABASE RECORDS</h3>
 
-      {/* Category Filter Tabs */}
       <div className="filter-tabs">
         {categories.map((cat) => (
           <button
@@ -195,7 +240,6 @@ const LeaderboardScreen = ({ onBack }) => {
         ))}
       </div>
 
-      {/* Table Container - flex-1 to take up remaining space with scrolling */}
       <div style={{ flex: 1, overflowY: "auto", width: "100%" }}>
         <table className="highscore-table">
           <thead>
@@ -247,8 +291,8 @@ const LeaderboardScreen = ({ onBack }) => {
   );
 };
 
-// --- Component: Quiz Screen (Same as previous) ---
-const QuizScreen = ({ category, onGameEnd }) => {
+// --- Component: Quiz Screen ---
+const QuizScreen = ({ category, onGameEnd, userName }) => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -258,7 +302,6 @@ const QuizScreen = ({ category, onGameEnd }) => {
   const [isAnswerProcessed, setIsAnswerProcessed] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState([]);
 
-  // Helper function to shuffle array
   const shuffleArray = (array) => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -423,23 +466,21 @@ const QuizScreen = ({ category, onGameEnd }) => {
   );
 };
 
-// --- Component: Game Over Screen (Same as previous) ---
+// --- Component: Game Over Screen ---
 const GameOverScreen = ({ score, userName, category, onReset }) => {
   const [highScores, setHighScores] = useState([]);
 
   useEffect(() => {
-    const storedScores =
-      JSON.parse(localStorage.getItem("quizHighScores")) || [];
+    const storedScores = JSON.parse(localStorage.getItem("quizHighScores")) || [];
 
     const newEntry = {
       name: userName,
       score: score,
       category: category,
       date: new Date().toLocaleDateString(),
-      timestamp: Date.now(), // Add unique identifier
+      timestamp: Date.now(),
     };
 
-    // Check if this exact score was already saved (prevent duplicates)
     const isDuplicate = storedScores.some(
       (entry) =>
         entry.name === userName &&
@@ -548,4 +589,5 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
     </div>
   );
 };
+
 export default NewQuiz;
