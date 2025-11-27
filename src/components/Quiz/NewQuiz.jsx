@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./NewQuiz.css";
 import { quizData } from "./quizData";
+import { supabase } from "../../supabaseClient"; // Import Supabase connection
 
 const NewQuiz = ({ setShowQuiz }) => {
   const [gameState, setGameState] = useState("menu");
 
+  // Keep username in LocalStorage so the browser remembers the player
   const [userName, setUserName] = useState(() => {
     return localStorage.getItem("quizLastUser") || "";
   });
@@ -17,6 +19,7 @@ const NewQuiz = ({ setShowQuiz }) => {
       alert("Identify yourself, User.");
       return;
     }
+    // Save username locally for convenience
     localStorage.setItem("quizLastUser", userName);
     setCategory(selectedCategory);
     setGameState("playing");
@@ -73,7 +76,7 @@ const NewQuiz = ({ setShowQuiz }) => {
 
 // --- Component: Menu Screen ---
 const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShowQuiz }) => {
-  const [isConfirmed, setIsConfirmed] = useState(!!userName); // Auto-confirm if loaded from storage
+  const [isConfirmed, setIsConfirmed] = useState(!!userName); 
 
   const handleConfirm = () => {
     if (userName.trim()) {
@@ -82,7 +85,6 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
     }
   };
 
-  // Allow re-editing name
   const handleEdit = () => {
     setIsConfirmed(false);
   };
@@ -118,7 +120,6 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
         </button>
       </div>
 
-      {/* User Input Section */}
       <div style={{ margin: "20px 0", display: "flex", gap: "10px", justifyContent: "center" }}>
         {isConfirmed ? (
           <div 
@@ -167,7 +168,6 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
         SELECT QUESTION SET
       </p>
 
-      {/* Category Grid - Disabled until name is confirmed */}
       <div 
         className="category-grid" 
         style={{ 
@@ -202,18 +202,36 @@ const MenuScreen = ({ userName, setUserName, onStart, onViewLeaderboard, setShow
   );
 };
 
-// --- Component: Leaderboard Screen ---
+// --- Component: Leaderboard Screen (UPDATED FOR SUPABASE) ---
 const LeaderboardScreen = ({ onBack }) => {
   const categories = Object.keys(quizData);
   const [activeTab, setActiveTab] = useState(categories[0]);
   const [highScores, setHighScores] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const storedScores = JSON.parse(localStorage.getItem("quizHighScores")) || [];
-    const filtered = storedScores.filter((s) => s.category === activeTab);
-    filtered.sort((a, b) => b.score - a.score);
-    setHighScores(filtered.slice(0, 10));
+    fetchScores();
   }, [activeTab]);
+
+  const fetchScores = async () => {
+    setLoading(true);
+    try {
+      // Retrieve top 10 scores for the active category
+      const { data, error } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .eq('category', activeTab)
+        .order('score', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setHighScores(data || []);
+    } catch (err) {
+      console.error("Error fetching leaderboard:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -241,41 +259,46 @@ const LeaderboardScreen = ({ onBack }) => {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", width: "100%" }}>
-        <table className="highscore-table">
-          <thead>
-            <tr>
-              <th>RNK</th>
-              <th>AGENT</th>
-              <th style={{ textAlign: "right" }}>PTS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {highScores.length > 0 ? (
-              highScores.map((entry, index) => (
-                <tr key={index}>
-                  <td style={index === 0 ? { color: "#ffd700" } : {}}>
-                    #{index + 1}
-                  </td>
-                  <td>{entry.name}</td>
-                  <td style={{ textAlign: "right" }}>{entry.score}</td>
-                </tr>
-              ))
-            ) : (
+        {loading ? (
+          <div style={{ padding: "20px", color: "#00f3ff" }}>CONNECTING TO DB...</div>
+        ) : (
+          <table className="highscore-table">
+            <thead>
               <tr>
-                <td
-                  colSpan="3"
-                  style={{
-                    textAlign: "center",
-                    color: "#a0a0a0",
-                    padding: "30px 0",
-                  }}
-                >
-                  NO ENTRIES FOUND
-                </td>
+                <th>RNK</th>
+                <th>AGENT</th>
+                <th style={{ textAlign: "right" }}>PTS</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {highScores.length > 0 ? (
+                highScores.map((entry, index) => (
+                  <tr key={index}>
+                    <td style={index === 0 ? { color: "#ffd700" } : {}}>
+                      #{index + 1}
+                    </td>
+                    {/* Supabase column names are 'username' and 'score' */}
+                    <td>{entry.username}</td> 
+                    <td style={{ textAlign: "right" }}>{entry.score}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="3"
+                    style={{
+                      textAlign: "center",
+                      color: "#a0a0a0",
+                      padding: "30px 0",
+                    }}
+                  >
+                    NO ENTRIES FOUND
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div style={{ marginTop: "15px" }}>
@@ -291,7 +314,7 @@ const LeaderboardScreen = ({ onBack }) => {
   );
 };
 
-// --- Component: Quiz Screen ---
+// --- Component: Quiz Screen (No Changes) ---
 const QuizScreen = ({ category, onGameEnd, userName }) => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -466,44 +489,41 @@ const QuizScreen = ({ category, onGameEnd, userName }) => {
   );
 };
 
-// --- Component: Game Over Screen ---
+// --- Component: Game Over Screen (UPDATED FOR SUPABASE) ---
 const GameOverScreen = ({ score, userName, category, onReset }) => {
   const [highScores, setHighScores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedScores = JSON.parse(localStorage.getItem("quizHighScores")) || [];
-
-    const newEntry = {
-      name: userName,
-      score: score,
-      category: category,
-      date: new Date().toLocaleDateString(),
-      timestamp: Date.now(),
-    };
-
-    const isDuplicate = storedScores.some(
-      (entry) =>
-        entry.name === userName &&
-        entry.score === score &&
-        entry.category === category &&
-        entry.date === newEntry.date
-    );
-
-    let allScores = storedScores;
-    if (!isDuplicate) {
-      allScores = [...storedScores, newEntry];
-      localStorage.setItem("quizHighScores", JSON.stringify(allScores));
-    }
-
-    const categorySpecificScores = allScores.filter(
-      (entry) => entry.category === category
-    );
-
-    categorySpecificScores.sort((a, b) => b.score - a.score);
-    const top5 = categorySpecificScores.slice(0, 5);
-
-    setHighScores(top5);
+    saveAndFetchScores();
   }, []);
+
+  const saveAndFetchScores = async () => {
+    try {
+      // 1. Insert Score into Supabase
+      const { error: insertError } = await supabase
+        .from('leaderboard')
+        .insert([{ username: userName, score: score, category: category }]);
+
+      if (insertError) console.error("Error saving score:", insertError.message);
+
+      // 2. Fetch Top 5 for this category to display
+      const { data, error: fetchError } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .eq('category', category)
+        .order('score', { ascending: false })
+        .limit(5);
+
+      if (fetchError) throw fetchError;
+      setHighScores(data || []);
+
+    } catch (err) {
+      console.error("Game Over operation failed:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fade-in" style={{ width: "100%", textAlign: "center" }}>
@@ -536,50 +556,55 @@ const GameOverScreen = ({ score, userName, category, onReset }) => {
 
       <h3 style={{ fontSize: "1rem" }}>{category.toUpperCase()} LEADERBOARD</h3>
 
-      <table className="highscore-table">
-        <thead>
-          <tr>
-            <th>RNK</th>
-            <th>AGENT</th>
-            <th style={{ textAlign: "right" }}>PTS</th>
-          </tr>
-        </thead>
-        <tbody>
-          {highScores.length > 0 ? (
-            highScores.map((entry, index) => (
-              <tr
-                key={index}
-                style={
-                  entry.name === userName && entry.score === score
-                    ? {
-                        color: "#00f3ff",
-                        textShadow: "0 0 5px rgba(0,243,255,0.5)",
-                        fontWeight: "bold",
-                      }
-                    : {}
-                }
-              >
-                <td>{index + 1}</td>
-                <td>{entry.name}</td>
-                <td style={{ textAlign: "right" }}>{entry.score}</td>
-              </tr>
-            ))
-          ) : (
+      {loading ? (
+         <div style={{ padding: "20px", color: "#a0a0a0" }}>SAVING DATA...</div>
+      ) : (
+        <table className="highscore-table">
+          <thead>
             <tr>
-              <td
-                colSpan="3"
-                style={{
-                  textAlign: "center",
-                  color: "#a0a0a0",
-                  padding: "20px",
-                }}
-              >
-                NO DATA FOUND
-              </td>
+              <th>RNK</th>
+              <th>AGENT</th>
+              <th style={{ textAlign: "right" }}>PTS</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {highScores.length > 0 ? (
+              highScores.map((entry, index) => (
+                <tr
+                  key={index}
+                  style={
+                    // Highlight the current user's entry if it appears in top 5
+                    entry.username === userName && entry.score === score
+                      ? {
+                          color: "#00f3ff",
+                          textShadow: "0 0 5px rgba(0,243,255,0.5)",
+                          fontWeight: "bold",
+                        }
+                      : {}
+                  }
+                >
+                  <td>{index + 1}</td>
+                  <td>{entry.username}</td>
+                  <td style={{ textAlign: "right" }}>{entry.score}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="3"
+                  style={{
+                    textAlign: "center",
+                    color: "#a0a0a0",
+                    padding: "20px",
+                  }}
+                >
+                  NO DATA FOUND
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
 
       <div style={{ marginTop: "25px" }}>
         <button className="btn" style={{ width: "100%" }} onClick={onReset}>
