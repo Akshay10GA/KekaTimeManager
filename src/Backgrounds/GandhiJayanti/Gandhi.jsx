@@ -23,7 +23,7 @@ export default function Gandhi(props) {
       : value - 29 === -10
       ? "1 day to go"
       // : (currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? "Ghar Jao Beta !" : "Sabar Karo beta !";
-      : (currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? "Idhar Aao Beta !" : "Increment Chahiye !";  
+      : (currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? "Kya hua beta!" : "Aur beta";  
   const { nodes, materials } = useGLTF("/gandhi/gandhi.gltf");
   const material = new THREE.MeshBasicMaterial({ color: "#F5F5DC" });
 
@@ -116,7 +116,7 @@ export default function Gandhi(props) {
         bevelSize={0.02}
         material={material}
       >
-        {(currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? 'Increment Deta Hoon' : 'Chal Bhag Yahase'}
+        {(currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? 'Hogayi Increment' : 'Khush toh ho na?'}
       </Text3D>
     </>
   );
