@@ -116,7 +116,6 @@ export default function Gandhi(props) {
         bevelSize={0.02}
         material={material}
       >
-        /* {(currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? 'Kitna Kaam Karoge' : 'Abhi Time hai'} */
         {(currentDate.getHours() >= 19 && currentDate.getHours() <= 22 ) ? 'Increment Deta Hoon' : 'Chal Bhag Yahase'}
       </Text3D>
     </>
