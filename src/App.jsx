@@ -466,8 +466,6 @@ export default function App() {
   const { isXLSXLoaded } = useExternalScripts();
 
   // --- Supabase State ---
-
-  // --- Supabase State ---
   const [supabaseUrl, setSupabaseUrl] = useState(localStorage.getItem("sb_url") || import.meta.env.VITE_SUPABASE_URL);
   const [supabaseKey, setSupabaseKey] = useState(localStorage.getItem("sb_key") || import.meta.env.VITE_SUPABASE_ANON_KEY);
   const [supabase, setSupabase] = useState(null);
@@ -788,8 +786,10 @@ export default function App() {
     let message = `*Report for ${personName}*\n\n`;
     personTransactions.forEach((t, i) => {
       total += t.type === 'lent' ? t.amount : -t.amount;
-      message += `${i+1}. ${t.date}: ${t.type === 'lent' ? '🔴 Given' : '🟢 Rec'} ₹${t.amount}\n`;
+      // Change UI terms for report
+      message += `${i+1}. ${t.date}: ${t.type === 'lent' ? '🔴 Sent' : '🟢 Received'} ₹${t.amount}\n`;
     });
+    // Adjust net balance wording if necessary, but "You Get"/"You Give" is clear.
     message += `\n*Net Balance: ${total >= 0 ? 'You Get' : 'You Give'} ₹${Math.abs(total)}*`;
     window.open(`https://wa.me/${personMobile.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
   };
@@ -847,8 +847,8 @@ export default function App() {
         <main style={{ flex: 1 }}>
           {activeTab === "dashboard" && (
             <div className="stats-grid">
-               <div className="card stat-card lent"><div className="card-body"><div className="stat-header"><div className="stat-icon lent"><ArrowUpRight /></div><span className="stat-label">Lent</span></div><div className="stat-value text-primary">₹{stats.lent.toLocaleString()}</div></div></div>
-               <div className="card stat-card borrowed"><div className="card-body"><div className="stat-header"><div className="stat-icon borrowed"><ArrowDownLeft /></div><span className="stat-label">Borrowed</span></div><div className="stat-value text-accent">₹{stats.borrowed.toLocaleString()}</div></div></div>
+               <div className="card stat-card lent"><div className="card-body"><div className="stat-header"><div className="stat-icon lent"><ArrowUpRight /></div><span className="stat-label">Sent</span></div><div className="stat-value text-primary">₹{stats.lent.toLocaleString()}</div></div></div>
+               <div className="card stat-card borrowed"><div className="card-body"><div className="stat-header"><div className="stat-icon borrowed"><ArrowDownLeft /></div><span className="stat-label">Received</span></div><div className="stat-value text-accent">₹{stats.borrowed.toLocaleString()}</div></div></div>
                <div className="card stat-card net"><div className="card-body"><div className="stat-header"><div className="stat-icon net"><Wallet /></div><span className="stat-label">Net Balance</span></div><div className={`stat-value ${stats.net >= 0 ? "text-brand" : "text-accent"}`}>{stats.net >= 0 ? "+" : ""}₹{Math.abs(stats.net).toLocaleString()}</div></div></div>
             </div>
           )}
@@ -880,7 +880,7 @@ export default function App() {
                       <tr key={t.id}>
                         <td>{t.date}</td>
                         <td className="text-primary" style={{ fontWeight: "600" }}>{t.name}</td>
-                        <td><span className={`badge ${t.type}`}>{t.type === "lent" ? "Lent" : "Borrowed"}</span></td>
+                        <td><span className={`badge ${t.type}`}>{t.type === "lent" ? "Sent" : "Received"}</span></td>
                         <td className={t.type === "lent" ? "text-primary" : "text-accent"} style={{ textAlign: "right", fontWeight: "700" }}>₹{t.amount.toLocaleString()}</td>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -912,7 +912,7 @@ export default function App() {
                         <span className="trans-name">{t.name}</span> 
                         {t.image && <div style={{ color: 'var(--color-brand)', display:'flex' }}><ImageIcon size={14} /></div>}
                       </div>
-                      <span className={`badge ${t.type}`}>{t.type === 'lent' ? 'Lent' : 'Borrowed'}</span>
+                      <span className={`badge ${t.type}`}>{t.type === 'lent' ? 'Sent' : 'Received'}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                       <div>
@@ -1031,8 +1031,8 @@ export default function App() {
                  <input type="tel" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} className="form-input" placeholder="+91..." />
                </div>
                <div className="toggle-group">
-                 <button type="button" onClick={() => setFormData({...formData, type: "lent"})} className={`toggle-btn ${formData.type === "lent" ? "active-lent" : ""}`}>Lent (In)</button>
-                 <button type="button" onClick={() => setFormData({...formData, type: "borrowed"})} className={`toggle-btn ${formData.type === "borrowed" ? "active-borrowed" : ""}`}>Borrowed (Out)</button>
+                 <button type="button" onClick={() => setFormData({...formData, type: "lent"})} className={`toggle-btn ${formData.type === "lent" ? "active-lent" : ""}`}>Sent</button>
+                 <button type="button" onClick={() => setFormData({...formData, type: "borrowed"})} className={`toggle-btn ${formData.type === "borrowed" ? "active-borrowed" : ""}`}>Received</button>
                </div>
                <div className="toggle-group">
                   <div><label className="form-label">Amount</label><input type="number" required value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} className="form-input" placeholder="0.00" /></div>
