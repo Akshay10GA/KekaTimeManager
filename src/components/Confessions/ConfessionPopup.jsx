@@ -51,7 +51,6 @@ const ConfessionPopup = ({ open, onClose }) => {
         }
       }
     } catch (e) {
-      // If tampering detected or error, reset
       console.error("System pref error", e);
     }
   };
@@ -62,9 +61,44 @@ const ConfessionPopup = ({ open, onClose }) => {
       last_entry_date: today, 
       sys_id: Math.random().toString(36).substring(7) 
     });
-    // Encode to Base64 to make it harder to read/find casually
     localStorage.setItem(STORAGE_KEY_HIDDEN, btoa(data));
     setLimitReached(true);
+  };
+
+  // --- PROFANITY FILTER LOGIC ---
+  const filterProfanity = (text) => {
+    // 1. Define the blocklist
+    const badWords = [
+      // User specific
+      "porn", "sex", "boobs", "boob", "dick", "pussy", "mastrubation", "masturbation",
+      "gdtc", "go digital", "godigital",
+      // Common Profanity
+      "fuck", "shit", "bitch", "asshole", "bastard", "cunt", "whore", "slut", 
+      "rape", "damn", "cock", "suck", "nigger", "fag", "dyke", "retard", "piss"
+    ];
+
+    let cleanedText = text;
+
+    // 2. Iterate and replace
+    // We sort by length descending so "go digital" is caught before "go" (if "go" was banned)
+    badWords.sort((a, b) => b.length - a.length).forEach((word) => {
+      // Create a regex that is global (g) and case-insensitive (i)
+      // We generally want word boundaries (\b) to avoid replacing parts of innocent words (e.g., "class" -> "cl***")
+      // However, for spaced words like "go digital", boundaries work on the start/end.
+      
+      const regex = new RegExp(`\\b${word}\\b`, "gi");
+      cleanedText = cleanedText.replace(regex, "***");
+      
+      // OPTIONAL: simple "smart" check for spacing evasion (e.g. "p o r n")
+      // This is aggressive and might have false positives, but helps with "smart" players.
+      if (word.length > 3 && !word.includes(" ")) {
+        const spacedWord = word.split("").join("\\s+"); // p\s+o\s+r\s+n
+        const spacedRegex = new RegExp(spacedWord, "gi");
+        cleanedText = cleanedText.replace(spacedRegex, "***");
+      }
+    });
+
+    return cleanedText;
   };
 
   const fetchConfessions = async () => {
@@ -87,9 +121,12 @@ const ConfessionPopup = ({ open, onClose }) => {
     setSending(true);
     setErrorMsg("");
 
+    // Apply Filter Here
+    const cleanConfession = filterProfanity(confession);
+
     const { error } = await supabase
       .from("confessions")
-      .insert([{ content: confession }]);
+      .insert([{ content: cleanConfession }]);
 
     if (error) {
       setErrorMsg("Failed to send. Try again.");
@@ -127,7 +164,6 @@ const ConfessionPopup = ({ open, onClose }) => {
       </DialogTitle>
       
       <DialogContent>
-        {/* Input Section */}
         <Box sx={{ mb: 3 }}>
           {limitReached ? (
             <Typography 
@@ -157,6 +193,9 @@ const ConfessionPopup = ({ open, onClose }) => {
                   }
                 }}
               />
+              <Typography variant="caption" sx={{ color: '#777', mt: 0.5, display: 'block' }}>
+                Note: Inappropriate language will be censored.
+              </Typography>
               <Button 
                 variant="contained" 
                 fullWidth 
@@ -177,7 +216,6 @@ const ConfessionPopup = ({ open, onClose }) => {
           Recent Confessions
         </Typography>
 
-        {/* Feed Section */}
         {loading ? (
           <Box display="flex" justifyContent="center" p={2}>
             <CircularProgress size={24} sx={{ color: '#f78900' }} />
