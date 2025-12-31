@@ -1,0 +1,19 @@
+.product-card { cursor: pointer; transition: opacity 0.3s; }
+.product-card:hover { opacity: 0.9; }
+
+.p-img-wrap {
+  position: relative; aspect-ratio: 3/4; overflow: hidden;
+  background: #f0f0f0; margin-bottom: 12px;
+}
+
+.p-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.product-card:hover .p-img { transform: scale(1.05); }
+
+.wishlist-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: #fff; border-radius: 50%; padding: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.p-details h3 { font-size: 0.95rem; font-weight: 500; margin-bottom: 4px; }
+.p-price { font-weight: 700; color: var(--color-secondary); }

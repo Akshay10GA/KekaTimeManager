@@ -1,0 +1,6 @@
+.footer { background: #1c1c1c; color: #fff; padding: 60px 20px; margin-top: 60px; }
+.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; }
+.footer-heading { margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+.footer-links { color: #aaa; line-height: 2; }
+.footer-links li { cursor: pointer; }
+.footer-bottom { text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #333; color: #555; font-size: 0.8rem; }

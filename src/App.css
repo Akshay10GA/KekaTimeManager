@@ -1,0 +1,50 @@
+:root {
+  --color-primary: #1c1c1c;
+  --color-secondary: #555555;
+  --color-accent: #c5a47e;
+  --color-bg: #ffffff;
+  --color-light: #f4f4f4;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+  --header-height: 60px;
+  --max-width: 1400px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-primary);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 16px; }
+.section { padding: 40px 0; }
+
+/* Global Utilities */
+.grid-title { text-align: center; font-family: var(--font-serif); font-size: 2rem; margin-bottom: 30px; }
+.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); gap: 30px; } }
+
+.page-header { text-align: center; padding: 60px 20px; background: var(--color-light); margin-bottom: 40px; }
+.page-title { font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 10px; }
+.text-block { max-width: 800px; margin: 0 auto; text-align: center; padding-bottom: 60px; }
+
+.fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Search Overlay */
+.search-overlay {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: #fff; padding: 20px; border-bottom: 1px solid #eee;
+  transform: translateY(-20px); opacity: 0; pointer-events: none; transition: all 0.3s;
+  z-index: 90;
+}
+.search-overlay.open { transform: translateY(0); opacity: 1; pointer-events: all; }
+.search-input { width: 100%; padding: 12px; font-size: 1.2rem; border: none; border-bottom: 2px solid var(--color-primary); outline: none; font-family: var(--font-serif); }

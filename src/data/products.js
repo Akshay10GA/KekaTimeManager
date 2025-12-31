@@ -1,0 +1,10 @@
+export const PRODUCTS = [
+  { id: 1, name: "Gulmohar Cotton Set", price: 2499, category: "coords", image: "https://images.unsplash.com/photo-1631233859262-0d625cf02673?auto=format&fit=crop&q=80&w=800", desc: "Hand-block printed cotton co-ord set with intricate Jaipur motifs." },
+  { id: 2, name: "Chandni Anarkali", price: 3200, category: "suits", image: "https://images.unsplash.com/photo-1583391733958-e0267696169c?auto=format&fit=crop&q=80&w=800", desc: "Flowy white anarkali suit perfect for summer evenings." },
+  { id: 3, name: "Indigo Block Kurti", price: 1299, category: "kurtis", image: "https://images.unsplash.com/photo-1605658634863-7188d3023e3e?auto=format&fit=crop&q=80&w=800", desc: "Classic Indigo prints on soft cotton fabric." },
+  { id: 4, name: "Marigold Maxi Dress", price: 1899, category: "dresses", image: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800", desc: "Bright yellow maxi dress for the festive vibe." },
+  { id: 5, name: "Royal Blue Kaftan", price: 1550, category: "dresses", image: "https://images.unsplash.com/photo-1629169990262-232eb2a79ebf?auto=format&fit=crop&q=80&w=800", desc: "Comfortable lounge wear with a touch of elegance." },
+  { id: 6, name: "Peach Sharara Set", price: 4500, category: "suits", image: "https://images.unsplash.com/photo-1610189012906-40742d453086?auto=format&fit=crop&q=80&w=800", desc: "Heavy embroidery sharara set for weddings." },
+  { id: 7, name: "Teal Cotton Pant", price: 899, category: "bottoms", image: "https://images.unsplash.com/photo-1622123516062-17983b544379?auto=format&fit=crop&q=80&w=800", desc: "Straight fit cotton pants with side pockets." },
+  { id: 8, name: "Jaipuri Dupatta", price: 599, category: "accessories", image: "https://images.unsplash.com/photo-1609357912384-918d39dc9f39?auto=format&fit=crop&q=80&w=800", desc: "Chiffon dupatta with traditional Rajasthani prints." },
+];

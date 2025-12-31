@@ -1,0 +1,12 @@
+.filter-btn {
+  color: #999;
+  font-weight: 400;
+  text-transform: capitalize;
+  border-bottom: none;
+  transition: all 0.2s;
+}
+.filter-btn.active {
+  color: var(--color-primary);
+  font-weight: 600;
+  border-bottom: 1px solid black;
+}
