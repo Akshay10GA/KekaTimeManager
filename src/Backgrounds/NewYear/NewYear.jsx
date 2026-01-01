@@ -5,6 +5,7 @@ import {
   Environment,
   PerspectiveCamera,
 } from "@react-three/drei";
+import Background from "./Background";
 
 const BASE_POSITION = [0, 2, 6];
 const LOOK_AT = [0, 1, 1];
@@ -44,6 +45,7 @@ const NewYear = () => {
       />
 
       <Environment preset="sunset" />
+      <Background />
       <Scene />
     </>
   );
