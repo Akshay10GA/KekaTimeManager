@@ -5,4 +5,5 @@ export const Backgrounds = Object.freeze({
   Earth: "earth",
   Gandhi: "gandhi",
   Santa: "santa",
+  NewYear: "newyear",
 });

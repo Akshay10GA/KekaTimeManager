@@ -12,7 +12,7 @@ const InteractiveTutorial = ({
 
   useEffect(() => {
     const completed = localStorage.getItem("tutorialCompleted");
-    if (!completed) {
+    if (completed) {
       setRun(true);
     }
   }, []);
@@ -30,52 +30,74 @@ const steps = [
     ),
     placement: "center",
     disableBeacon: true,
+    index: 0,
   },
   {
     target: "body",
     content: "First things first! This is the canvas where your special backgrounds appear. 🎨",
     placement: "center",
     disableBeacon: true,
+    index: 1,
   },
   {
     target: ".keka-manager",
     content: "Paste your time entries here to track your day. ⏰",
     placement: "top",
     disableBeacon: true,
+    index: 2,
   },
   {
     target: ".joyride-calculate-button",
     content: "After pasting entries, hit this button to calculate your time. 🔢",
     placement: "top",
     disableBeacon: true,
+    index: 3,
   },
   {
     target: ".joyride-blue-clock-position",
     content: "Check out your completed and remaining time here. Blue means progress! 💙",
     placement: "right",
     disableBeacon: true,
+    index: 4,
   },
   {
     target: ".joyride-red-clock-position",
     content: "Break time details pop up here. Red means pause! 🛑",
     placement: "left",
     disableBeacon: true,
+    index: 5,
   },
   {
     target: ".joyride-progress-bar",
     content: "Visualize your progress toward a 9-hour shift here. Watch it fill up! 📊",
     placement: "bottom",
     disableBeacon: true,
+    index: 6
   },
   {
     target: ".hamburger-menu",
     content: "Click here to open the menu and access all the new features! (Or press 'Esc') 🍔",
     placement: "right",
+    index: 7
   },
   {
-    target: ".joyride-menu-dialog",
-    content: "Explore the menu options! Use 'Ctrl + Q' for Quiz, 'Ctrl + M' for canvas mode. Surprises await! 🎁",
+    target: ".confession-mark",
+    content: "Click here to share your thoughts anonymously with colleagues. It's fun and liberating! 🤫",
     placement: "right",
+    index: 8
+  },
+  {
+    target: ".movies-mark",
+    content: "Click here to suggest movies and see what others recommend. Movie buffs unite! 🎬",
+    placement: "right",
+    index: 8
+  },
+  
+  {
+    target: ".quiz-mark",
+    content: "Click here to take fun quizzes and challenge your knowledge. Test yourself! 🧠",
+    placement: "right",
+    index: 8
   },
   {
     target: "body",
@@ -94,13 +116,13 @@ const steps = [
     }
 
     // Open menu during step 3
-    if (index === 7 && type === "step:before") {
-      setShowMenu(true);
-    }
+    // if (index === 7 && type === "step:before") {
+    //   setShowMenu(true);
+    // }
     // Close menu after step 4 (Quiz step)
-    if (index === 8 && type === "step:after") {
-      setShowMenu(false);
-    }
+    // if (index === 8 && type === "step:after") {
+    //   setShowMenu(false);
+    // }
 
     // Step advancement
     if (type === "step:after" || type === "target:notFound") {

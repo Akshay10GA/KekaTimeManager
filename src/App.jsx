@@ -34,7 +34,7 @@ const App = () => {
 
     const theme = Object.keys(THEME_DATES).find((key) =>
       THEME_DATES[key].includes(todayKey)
-    ) || Backgrounds.Car;
+    ) || Backgrounds.NewYear;
 
     localStorage.setItem("canvasTheme", theme);
     localStorage.setItem("useDefault", true);

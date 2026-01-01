@@ -9,9 +9,9 @@ const HamburgerMenu = ({ onClick, setShowQuiz }) => {
   // const [showQuiz, setShowQuiz] = useState(false);
 
   return (
-    <div className="hamburger-menu-container hamburger-menu">
+    <div className="hamburger-menu-container ">
       {/* Existing Menu Button */}
-      <button className="hamburger-menu-button" onClick={onClick}>
+      <button className="hamburger-menu-button  hamburger-menu" onClick={onClick}>
         <svg
           width="24"
           height="24"
@@ -31,7 +31,7 @@ const HamburgerMenu = ({ onClick, setShowQuiz }) => {
 
       {/* New Confessions Button */}
       <button
-        className="hamburger-menu-button confession-btn"
+        className="hamburger-menu-button confession-btn confession-mark"
         onClick={() => setShowConfessions(true)}
       >
         <svg
@@ -51,7 +51,7 @@ const HamburgerMenu = ({ onClick, setShowQuiz }) => {
 
       {/* New Movie Suggestions Button */}
       <button
-        className="hamburger-menu-button confession-btn"
+        className="hamburger-menu-button confession-btn movies-mark"
         onClick={() => setShowMovies(true)}
       >
         <svg
@@ -73,7 +73,7 @@ const HamburgerMenu = ({ onClick, setShowQuiz }) => {
 
       {/* Quiz Button */}
       <button
-        className="hamburger-menu-button confession-btn"
+        className="hamburger-menu-button confession-btn quiz-mark"
         onClick={() => setShowQuiz(true)}
       >
 <svg

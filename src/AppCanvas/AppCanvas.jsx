@@ -9,6 +9,7 @@ import Car from "../Backgrounds/Car/Car";
 import Planets_and_satellites from "../Backgrounds/PlanetsAndSatellites/Planets_and_satellites";
 import Santa from "../Backgrounds/Santa/Santa_dance";
 import GandhiJayanti from "../Backgrounds/GandhiJayanti/GandhiJayanti";
+import NewYear from "../Backgrounds/NewYear/NewYear";
 
 const AppCanvas = ({ refresh }) => {
   const [theme, setTheme] = useState(() => localStorage.getItem("canvasTheme"));
@@ -37,6 +38,7 @@ const AppCanvas = ({ refresh }) => {
         {theme === Backgrounds.GDTCLOGO && <GdtcLogo />}
         {theme === Backgrounds.Santa && <Santa />}
         {theme === Backgrounds.Gandhi && <GandhiJayanti />}
+        {theme === Backgrounds.NewYear && <NewYear />}
       </Canvas>
     </Suspense>
   );
