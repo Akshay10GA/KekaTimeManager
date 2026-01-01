@@ -12,7 +12,7 @@ const InteractiveTutorial = ({
 
   useEffect(() => {
     const completed = localStorage.getItem("tutorialCompleted");
-    if (completed) {
+    if (!completed) {
       setRun(true);
     }
   }, []);
