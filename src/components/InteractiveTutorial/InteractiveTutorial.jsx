@@ -12,7 +12,7 @@ const InteractiveTutorial = ({
 
   useEffect(() => {
     const completed = localStorage.getItem("tutorialCompleted");
-    if (!completed) {
+    if (completed) {
       setRun(true);
     }
   }, []);
@@ -41,7 +41,17 @@ const steps = [
   },
   {
     target: ".keka-manager",
-    content: "Paste your time entries here to track your day. ⏰",
+    content: (
+      <div style={{ textAlign: "center"}}>
+        <img
+    src="/keka_copy.png"
+    alt="Quiz tip"
+    style={{ width: "250px", height: "250px", transform: "scaleX(1)", zIndex: 1, padding: "10px" }}
+  />
+    <p style={{ marginTop: "235px" }}>Copy these values from keka and paste them here!</p>
+      </div>
+    ),
+    // content: "Paste your time entries here to track your day. ⏰",
     placement: "top",
     disableBeacon: true,
     index: 2,
