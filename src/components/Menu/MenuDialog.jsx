@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import BackgroundDropdown from "../BackgroundDropdown/BackgroundDropdown";
 import JotFormPopup from "../JotForm/JotFormPopup";
-import "./MenuDialog.css"; // Import the new styles
+import "./MenuDialog.css";
 
 const MenuDialog = ({
   open,
@@ -25,18 +25,32 @@ const MenuDialog = ({
   const [showReloadNote, setShowReloadNote] = useState(false);
   const [openJotForm, setOpenJotForm] = useState(false);
 
-  // Clock updater
+  /* ---------------- CLOCK ---------------- */
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Format HH:MM:SS
   const formatTime = (date) => {
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    return `${hours}:${minutes}:${seconds}`;
+    const h = String(date.getHours()).padStart(2, "0");
+    const m = String(date.getMinutes()).padStart(2, "0");
+    const s = String(date.getSeconds()).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+
+  /* ---------------- STATE HYDRATION ---------------- */
+  // Restore Canvas Only Mode on first mount
+  useEffect(() => {
+    const stored = localStorage.getItem("showKekaCalculator");
+    if (stored !== null) {
+      setShowKekaCalculator(JSON.parse(stored));
+    }
+  }, [setShowKekaCalculator]);
+
+  const handleCanvasOnlyToggle = () => {
+    const next = !showKekaCalculator;
+    setShowKekaCalculator(next);
+    localStorage.setItem("showKekaCalculator", JSON.stringify(next));
   };
 
   const handleSetUseDefaultBackground = (value) => {
@@ -48,25 +62,24 @@ const MenuDialog = ({
   return (
     <>
       <JotFormPopup open={openJotForm} onClose={() => setOpenJotForm(false)} />
-      
+
       <Dialog
         open={open}
         onClose={onClose}
-        className="menu-glass-dialog" // Hooks into our CSS
+        className="menu-glass-dialog"
         maxWidth="md"
         fullWidth
       >
         <DialogContent>
           <div className="menu-content-row">
-            
-            {/* LEFT PANEL — DIGITAL CLOCK */}
+            {/* LEFT PANEL — CLOCK */}
             <div className="clock-panel">
               {formatTime(currentTime)}
             </div>
 
-            {/* RIGHT PANEL — MENU ITEMS */}
+            {/* RIGHT PANEL — OPTIONS */}
             <div className="menu-options-panel joyride-menu-dialog">
-              
+
               {/* Canvas Only Mode */}
               <div className="menu-item">
                 <div className="menu-label">
@@ -75,18 +88,34 @@ const MenuDialog = ({
                 </div>
                 <Switch
                   checked={!showKekaCalculator}
-                  onChange={() => setShowKekaCalculator(!showKekaCalculator)}
-                  color="secondary" // Matches dark theme better usually
+                  onChange={handleCanvasOnlyToggle}
+                  color="secondary"
                 />
               </div>
 
               {/* Default Background */}
-              <div className="menu-item" style={{ flexDirection: "column", alignItems: "stretch", gap: "4px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                className="menu-item"
+                style={{
+                  flexDirection: "column",
+                  alignItems: "stretch",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <div className="menu-label">
                     Show default background
                     <Tooltip title="Automatically apply themed backgrounds during festivals and special occasions">
-                      <IconButton size="small" sx={{ color: "rgba(255,255,255,0.6)" }}>
+                      <IconButton
+                        size="small"
+                        sx={{ color: "rgba(255,255,255,0.6)" }}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -105,12 +134,16 @@ const MenuDialog = ({
                       </IconButton>
                     </Tooltip>
                   </div>
+
                   <Switch
                     checked={useDefaultBackground}
-                    onChange={() => handleSetUseDefaultBackground(!useDefaultBackground)}
+                    onChange={() =>
+                      handleSetUseDefaultBackground(!useDefaultBackground)
+                    }
                     color="secondary"
                   />
                 </div>
+
                 {showReloadNote && (
                   <div className="reload-note">
                     May require reloading to take effect
@@ -118,7 +151,7 @@ const MenuDialog = ({
                 )}
               </div>
 
-              {/* Background Dropdown (Component) */}
+              {/* Background Selector */}
               <div className="menu-item">
                 <BackgroundDropdown
                   useDefaultBackground={useDefaultBackground}
@@ -127,8 +160,8 @@ const MenuDialog = ({
                 />
               </div>
 
-              {/* Quiz Button */}
-              <div
+              {/* Quiz */}
+              {/* <div
                 className="menu-item quiz-item"
                 onClick={() => {
                   onClose();
@@ -139,9 +172,9 @@ const MenuDialog = ({
                   Take a Quiz?
                   <span className="menu-shortcut">Ctrl + Q</span>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Feedback Button */}
+              {/* Feedback */}
               <div
                 className="menu-item feedback-item"
                 onClick={() => setOpenJotForm(true)}

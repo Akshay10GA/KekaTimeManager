@@ -245,9 +245,9 @@ const ConfessionPopup = ({ open, onClose }) => {
 
             <Divider sx={{ bgcolor: '#555', mb: 2 }} />
             
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1, color: '#aaa' }}>
+            {/* <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1, color: '#aaa' }}>
             Recent Confessions
-            </Typography>
+            </Typography> */}
 
             {/* Feed Section */}
             {loading ? (

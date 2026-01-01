@@ -69,7 +69,7 @@ const App = () => {
         setShowMenu={setShowMenu}
       />
       
-      <HamburgerMenu onClick={() => setShowMenu(true)} />
+      <HamburgerMenu onClick={() => setShowMenu(true)} setShowQuiz={setShowQuiz}/>
       
       <AppCanvas refresh={refresh} className="canvas-section" />
       
