@@ -12,7 +12,7 @@ const InteractiveTutorial = ({
 
   useEffect(() => {
     const completed = localStorage.getItem("tutorialCompleted");
-    if (completed) {
+    if (!completed) {
       setRun(true);
     }
   }, []);
@@ -90,20 +90,21 @@ const steps = [
     target: ".movies-mark",
     content: "Click here to suggest movies and see what others recommend. Movie buffs unite! 🎬",
     placement: "right",
-    index: 8
+    index: 9
   },
   
   {
     target: ".quiz-mark",
     content: "Click here to take fun quizzes and challenge your knowledge. Test yourself! 🧠",
     placement: "right",
-    index: 8
+    index: 10
   },
   {
     target: "body",
     content: "🎉 That’s it! Have fun exploring all the new changes and don’t forget to give feedback.",
     placement: "center",
     disableBeacon: true,
+    index: 11
   },
 ];
 
