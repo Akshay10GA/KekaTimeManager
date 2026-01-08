@@ -5,8 +5,4 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ["**/*.dae", "**/*.gltf"],
-  define: {
-    // This is required for the emoji picker to work in Vite
-    global: 'window',
-  },
 });

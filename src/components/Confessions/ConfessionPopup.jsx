@@ -16,11 +16,10 @@ import {
   DialogActions,
   Popover,
   Chip,
-  Collapse
+  Collapse,
+  Avatar
 } from "@mui/material";
 import { supabase } from "../../supabaseClient";
-import { CommentSection } from "@guozg/react-comments-section";
-import "@guozg/react-comments-section/dist/index.css";
 
 // "Hidden" storage key for daily limit
 const STORAGE_KEY_HIDDEN = "keka_sys_pref_log_v2";
@@ -30,11 +29,165 @@ const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 // Available reactions
 const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', '🍌', '🍆', '🍑'];
 
+// --- CUSTOM COMMENT COMPONENTS ---
+
+const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", autoFocus = false }) => {
+  const [text, setText] = useState("");
+
+  const handleSubmit = () => {
+    if (!text.trim()) return;
+    onSubmit(text);
+    setText("");
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+      <TextField
+        fullWidth
+        multiline
+        autoFocus={autoFocus}
+        size="small"
+        placeholder={placeholder}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        sx={{
+          backgroundColor: '#2a2a2a',
+          '& .MuiOutlinedInput-root': {
+            color: 'white',
+            '& fieldset': { borderColor: '#555' },
+            '&:hover fieldset': { borderColor: '#777' },
+            '&.Mui-focused fieldset': { borderColor: '#f78900' },
+          }
+        }}
+      />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        {onCancel && (
+          <Button 
+            size="small" 
+            onClick={onCancel}
+            sx={{ color: '#aaa', textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+        )}
+        <Button 
+          variant="contained" 
+          size="small" 
+          onClick={handleSubmit}
+          disabled={!text.trim()}
+          sx={{ bgcolor: '#f78900', '&:hover': { bgcolor: '#d67600' }, textTransform: 'none' }}
+        >
+          Post
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => {
+  const [isReplying, setIsReplying] = useState(false);
+
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <Avatar 
+          src={comment.avatarUrl} 
+          alt={comment.fullName}
+          sx={{ width: 28, height: 28, bgcolor: '#f78900' }}
+        />
+        <Box sx={{ flex: 1 }}>
+          {/* Header: Name + Time */}
+          {/* <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#f78900', fontWeight: 'bold', fontSize: '0.9rem' }}>
+              {comment.fullName}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
+              {new Date(comment.created_at).toLocaleDateString()}
+            </Typography>
+          </Box> */}
+
+          {/* Comment Text */}
+          <Typography variant="body2" sx={{ color: '#e0e0e0', whiteSpace: 'pre-wrap', wordBreak: 'break-word', mt: 0.5 }}>
+            {comment.text}
+          </Typography>
+
+          {/* Actions Bar */}
+          <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
+            <Button 
+              size="small" 
+              onClick={() => setIsReplying(!isReplying)}
+              sx={{ 
+                minWidth: 0, p: 0, 
+                color: '#888', 
+                fontSize: '0.75rem', 
+                textTransform: 'none',
+                '&:hover': { color: '#f78900', bgcolor: 'transparent' } 
+              }}
+            >
+              Reply
+            </Button>
+            
+            {/* Show delete if Admin OR if it's the current user's comment */}
+            {(isAdmin || currentUserId === comment.userId) && (
+              <Button 
+                size="small" 
+                onClick={() => onDelete(comment.id)}
+                sx={{ 
+                  minWidth: 0, p: 0, 
+                  color: '#888', 
+                  fontSize: '0.75rem', 
+                  textTransform: 'none',
+                  '&:hover': { color: '#ff4444', bgcolor: 'transparent' } 
+                }}
+              >
+                Delete
+              </Button>
+            )}
+          </Box>
+
+          {/* Reply Input */}
+          {isReplying && (
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <CommentInput 
+                autoFocus
+                placeholder={`Replying to ${comment.fullName}...`}
+                onSubmit={(text) => {
+                  onReply(text, comment.id);
+                  setIsReplying(false);
+                }}
+                onCancel={() => setIsReplying(false)}
+              />
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Nested Replies */}
+      {comment.replies && comment.replies.length > 0 && (
+        <Box sx={{ ml: 2, mt: 1, pl: 2, borderLeft: '2px solid rgba(255,255,255,0.05)' }}>
+          {comment.replies.map(reply => (
+            <CommentItem 
+              key={reply.id} 
+              comment={reply} 
+              onReply={onReply} 
+              onDelete={onDelete} 
+              isAdmin={isAdmin}
+              currentUserId={currentUserId}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// --- MAIN COMPONENT ---
+
 const ConfessionPopup = ({ open, onClose }) => {
   const [confession, setConfession] = useState("");
   const [messages, setMessages] = useState([]);
   const [reactions, setReactions] = useState({}); 
-  const [replyCounts, setReplyCounts] = useState({}); // { [confessionId]: count }
+  const [replyCounts, setReplyCounts] = useState({}); 
   const [commentsData, setCommentsData] = useState({}); 
   const [expandedComments, setExpandedComments] = useState({}); 
   const [loading, setLoading] = useState(false);
@@ -61,17 +214,14 @@ const ConfessionPopup = ({ open, onClose }) => {
     return id;
   }, []);
 
-  // Generate identity: Use 'quizLastUser' if available, otherwise 'Anonymous'
+  // Generate identity
   const currentUser = useMemo(() => {
     const storedName = localStorage.getItem("quizLastUser");
     const displayName = storedName ? storedName : "Anonymous";
-    
     return {
       userId: userId,
-      // Update avatar to match the display name
       avatarUrl: `https://ui-avatars.com/api/?name=${displayName}&background=random&seed=${userId}`,
       name: displayName,
-      profileUrl: "#"
     };
   }, [userId]);
 
@@ -194,17 +344,20 @@ const ConfessionPopup = ({ open, onClose }) => {
     const map = {};
     const roots = [];
 
+    // Initialize map
     flatComments.forEach(c => {
       map[c.id] = {
+        id: c.id,
         userId: c.user_id,
-        comId: c.id.toString(),
         fullName: c.full_name,
         avatarUrl: c.avatar_url,
         text: c.text,
+        created_at: c.created_at,
         replies: [] 
       };
     });
 
+    // Link parents and children
     flatComments.forEach(c => {
       if (c.parent_id) {
         if (map[c.parent_id]) {
@@ -240,25 +393,16 @@ const ConfessionPopup = ({ open, onClose }) => {
     });
   };
 
-  const handleCommentSubmit = async (data, confessionId) => {
-    let finalParentId = data.repliedToCommentId || null;
-    let finalText = filterProfanity(data.text);
+  const handleCommentSubmit = async (text, confessionId, parentId = null) => {
+    let finalText = filterProfanity(text);
+    let finalParentId = parentId;
 
-    // DEPTH CHECK LOGIC:
-    if (finalParentId) {
-        const { data: parentComment } = await supabase
-            .from("confession_replies")
-            .select("parent_id, full_name")
-            .eq("id", finalParentId)
-            .single();
-        
-        if (parentComment) {
-            if (parentComment.parent_id) {
-                finalParentId = parentComment.parent_id;
-                finalText = `@${parentComment.full_name || 'User'} ${finalText}`;
-            }
-        }
-    }
+    // Check for depth limiting or mentions if necessary
+    // (Custom logic: if replying to a nested comment, flat architecture with mentions is often easier, 
+    // but here we support infinite nesting via recursive components, so we pass parentId directly)
+    
+    // NOTE: To prevent infinite indentation on small screens, you could cap the depth here 
+    // and force a flat structure after N levels, but we'll stick to tree for now.
 
     const payload = {
       confession_id: confessionId,
@@ -275,7 +419,7 @@ const ConfessionPopup = ({ open, onClose }) => {
       console.error("Reply error", error);
     } else {
       fetchComments(confessionId);
-      if (!payload.parent_id) {
+      if (!finalParentId) {
         setReplyCounts(prev => ({
             ...prev,
             [confessionId]: (prev[confessionId] || 0) + 1
@@ -284,35 +428,21 @@ const ConfessionPopup = ({ open, onClose }) => {
     }
   };
 
-  // Admin delete reply handler
-  const handleDeleteComment = async (data, confessionId) => {
-    const comId = data.comId; 
+  const handleDeleteComment = async (commentId, confessionId) => {
     if (!window.confirm("Delete this reply?")) return;
 
     const { error } = await supabase
       .from("confession_replies")
       .delete()
-      .eq("id", comId);
+      .eq("id", commentId);
 
     if (error) {
       console.error("Error deleting reply:", error);
     } else {
       fetchComments(confessionId);
+      // Re-fetch counts loosely or decrement manually
       fetchReplyCounts([confessionId]);
     }
-  };
-
-  // Helper to spoof user IDs for admin so they see the delete button
-  const prepareCommentsForRender = (comments, isAdmin, adminId) => {
-    if (!isAdmin) return comments;
-    const traverse = (nodes) => {
-        return nodes.map(node => ({
-            ...node,
-            userId: adminId, 
-            replies: node.replies ? traverse(node.replies) : []
-        }));
-    };
-    return traverse(comments);
   };
 
   // --- REACTION LOGIC ---
@@ -381,30 +511,6 @@ const ConfessionPopup = ({ open, onClose }) => {
 
   return (
     <>
-      <style>{`
-        /* Overrides for the CommentSection library to fit dark theme */
-        .sc-user-input {
-            background-color: transparent !important;
-        }
-        /* Style the input box: opaque dark background for visibility */
-        .sc-input-box {
-            background-color: #2a2a2a !important; 
-            border: 1px solid #555 !important;
-            color: white !important;
-        }
-        /* Style the comment display text */
-        .sc-comment-text {
-            color: #e0e0e0 !important;
-        }
-        /* Style user names */
-        .sc-user-name {
-            color: #f78900 !important;
-        }
-        /* HIDE THE DEFAULT EMOJI PICKER from the library */
-        .sc-emoji-icon, .emoji-icon {
-            display: none !important;
-        }
-      `}</style>
       <Dialog 
         open={open} 
         onClose={onClose} 
@@ -484,9 +590,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                     const msgReactions = reactions[msg.id] || { counts: {}, userReaction: null };
                     const isCommentsOpen = !!expandedComments[msg.id];
                     const replyCount = replyCounts[msg.id] || 0;
-                    
-                    const rawComments = commentsData[msg.id] || [];
-                    const renderedComments = prepareCommentsForRender(rawComments, isAdmin, currentUser.userId);
+                    const nestedComments = commentsData[msg.id] || [];
 
                     return (
                     <ListItem key={msg.id} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 2, borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', position: 'relative', pr: isAdmin ? 5 : 2 }}>
@@ -533,25 +637,31 @@ const ConfessionPopup = ({ open, onClose }) => {
 
                         {/* Collapsible Comments Section */}
                         <Collapse in={isCommentsOpen} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 2 }}>
-                            <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1 }}>
-                                <CommentSection
-                                    currentUser={currentUser}
-                                    logIn={{ loginLink: '#', signupLink: '#' }}
-                                    commentData={renderedComments}
-                                    onSubmitAction={(data) => handleCommentSubmit(data, msg.id)}
-                                    onReplyAction={(data) => handleCommentSubmit(data, msg.id)}
-                                    onDeleteAction={(data) => handleDeleteComment(data, msg.id)}
-                                    currentData={(data) => {}} 
-                                    placeholder="Write a reply..."
-                                    submitBtnStyle={{ backgroundColor: '#f78900', border: 'none', color: 'white', padding: '8px 16px' }}
-                                    cancelBtnStyle={{ backgroundColor: '#555', border: 'none', color: 'white', padding: '8px 16px' }}
-                                    overlayStyle={{ backgroundColor: 'transparent', color: 'white' }}
-                                    replyInputStyle={{ backgroundColor: '#2a2a2a', color: 'white', border: '1px solid #555' }}
-                                    inputStyle={{ backgroundColor: '#2a2a2a', color: 'white', border: '1px solid #555' }}
-                                    hrStyle={{ border: '0.5px solid #444' }}
-                                    titleStyle={{ color: '#ddd', fontSize: '0.9rem' }}
-                                    customNoComment={() => <Typography variant="caption" color="#666" sx={{p:1, display:'block'}}>No replies yet. Be the first!</Typography>}
+                            <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1 }}>
+                                {/* Top Level Input */}
+                                <CommentInput 
+                                    onSubmit={(text) => handleCommentSubmit(text, msg.id, null)} 
                                 />
+                                
+                                <Divider sx={{ my: 2, borderColor: '#444' }} />
+
+                                {/* Render Comments */}
+                                {nestedComments.length === 0 ? (
+                                    <Typography variant="caption" color="#666" sx={{ display:'block', textAlign: 'center' }}>
+                                        No replies yet. Be the first!
+                                    </Typography>
+                                ) : (
+                                    nestedComments.map(comment => (
+                                        <CommentItem 
+                                            key={comment.id} 
+                                            comment={comment} 
+                                            onReply={(text, parentId) => handleCommentSubmit(text, msg.id, parentId)}
+                                            onDelete={(commentId) => handleDeleteComment(commentId, msg.id)}
+                                            isAdmin={isAdmin}
+                                            currentUserId={currentUser.userId}
+                                        />
+                                    ))
+                                )}
                             </Box>
                         </Collapse>
 
