@@ -29,7 +29,41 @@ const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 // Available reactions
 const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', '🍌', '🍆', '🍑'];
 
-// --- CUSTOM COMMENT COMPONENTS ---
+// --- CUSTOM COMPONENTS ---
+
+// New SafeImage Component to catch and display loading errors!
+const SafeImage = ({ src, alt, style, isSupabase }) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src) return null;
+
+  if (hasError) {
+    return (
+      <Box sx={{ p: 1.5, border: '1px dashed #ff4444', borderRadius: 1, bgcolor: 'rgba(255,0,0,0.05)', mt: 1 }}>
+        <Typography color="error" variant="caption" display="block" fontWeight="bold">
+          ⚠️ {isSupabase ? "Meme Image" : "GIF"} failed to load.
+        </Typography>
+        <Typography color="#aaa" variant="caption" sx={{ wordBreak: 'break-all' }}>
+          {isSupabase ? "Check if your 'confession_media' bucket in Supabase is set to PUBLIC." : "The URL might be invalid or blocked by the source."}
+        </Typography>
+        <Typography color="#666" variant="caption" display="block" sx={{ mt: 0.5, wordBreak: 'break-all' }}>
+          Link: {src}
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ mt: 1, mb: 1 }}>
+      <img 
+        src={src} 
+        alt={alt} 
+        style={{ ...style, display: 'block' }} 
+        onError={() => setHasError(true)} 
+      />
+    </Box>
+  );
+};
 
 const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", autoFocus = false }) => {
   const [text, setText] = useState("");
@@ -68,7 +102,7 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
         <TextField
           fullWidth
           size="small"
-          placeholder="Paste GIF image URL here (e.g., https://media.tenor.com/...)"
+          placeholder="Paste direct GIF/Image URL (e.g., https://media.tenor.com/...)"
           value={gifUrl}
           onChange={(e) => setGifUrl(e.target.value)}
           sx={{
@@ -127,16 +161,13 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
             </Typography>
           )}
 
-          {/* Render GIF without the restrictive onError that hides it */}
-          {comment.gif_url ? (
-            <Box sx={{ mt: 1 }}>
-              <img 
-                src={comment.gif_url} 
-                alt="GIF reply" 
-                style={{ width: '100%', maxWidth: '250px', borderRadius: '8px', display: 'block' }} 
-              />
-            </Box>
-          ) : null}
+          {/* Render GIF safely */}
+          <SafeImage 
+            src={comment.gif_url} 
+            alt="GIF reply" 
+            style={{ width: '100%', maxWidth: '250px', borderRadius: '8px' }}
+            isSupabase={false}
+          />
 
           {/* Actions Bar */}
           <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
@@ -347,7 +378,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     setReplyCounts(counts);
   };
 
-  // --- COMMENT LOGIC ---
   const buildCommentTree = (flatComments) => {
     const map = {};
     const roots = [];
@@ -416,7 +446,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     const { error } = await supabase.from("confession_replies").insert([payload]);
     
     if (error) {
-      console.error("Error inserting reply:", error);
       alert(`Failed to save reply: ${error.message}`);
     } else {
       fetchComments(confessionId);
@@ -442,7 +471,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     }
   };
 
-  // --- REACTION LOGIC ---
   const handleReactionClick = async (msgId, emoji) => {
     setAnchorEl(null);
     setActiveMsgId(null);
@@ -473,7 +501,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     } catch (err) { console.error(err); }
   };
 
-  // Image handler for confessions
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -501,7 +528,6 @@ const ConfessionPopup = ({ open, onClose }) => {
         .upload(`memes/${fileName}`, imageFile);
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
         setErrorMsg(`Failed to upload image: ${uploadError.message}`);
         setSending(false);
         return;
@@ -522,7 +548,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     const { error } = await supabase.from("confessions").insert([payload]);
     
     if (error) {
-      console.error("Database Insert Error:", error);
       setErrorMsg(`DB Error: ${error.message}`);
     } else {
       setConfession("");
@@ -669,16 +694,13 @@ const ConfessionPopup = ({ open, onClose }) => {
                           />
                         )}
 
-                        {/* Render Confession Meme Image without the restrictive onError that hides it */}
-                        {msg.image_url ? (
-                          <Box sx={{ width: '100%', mt: 1, mb: 1 }}>
-                            <img 
-                                src={msg.image_url} 
-                                alt="Meme" 
-                                style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', display: 'block' }} 
-                            />
-                          </Box>
-                        ) : null}
+                        {/* Render Confession Meme Image safely */}
+                        <SafeImage 
+                          src={msg.image_url} 
+                          alt="Meme" 
+                          style={{ width: '100%', maxWidth: '400px', borderRadius: '8px' }}
+                          isSupabase={true}
+                        />
                         
                         <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                             {/* Reactions */}
