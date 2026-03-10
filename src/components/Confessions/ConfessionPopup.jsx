@@ -127,17 +127,16 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
             </Typography>
           )}
 
-          {/* Render GIF if exists in the database row */}
-          {comment.gif_url && (
+          {/* Render GIF without the restrictive onError that hides it */}
+          {comment.gif_url ? (
             <Box sx={{ mt: 1 }}>
               <img 
                 src={comment.gif_url} 
                 alt="GIF reply" 
-                style={{ width: '100%', maxWidth: '250px', borderRadius: '8px', objectFit: 'contain' }} 
-                onError={(e) => { e.target.style.display = 'none'; console.error("GIF failed to load:", comment.gif_url); }}
+                style={{ width: '100%', maxWidth: '250px', borderRadius: '8px', display: 'block' }} 
               />
             </Box>
-          )}
+          ) : null}
 
           {/* Actions Bar */}
           <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
@@ -360,7 +359,7 @@ const ConfessionPopup = ({ open, onClose }) => {
         fullName: c.full_name,
         avatarUrl: c.avatar_url,
         text: c.text,
-        gif_url: c.gif_url, // Ensure this maps exactly to the DB column
+        gif_url: c.gif_url, 
         created_at: c.created_at,
         replies: [] 
       };
@@ -480,7 +479,7 @@ const ConfessionPopup = ({ open, onClose }) => {
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
-      setErrorMsg(""); // clear previous errors
+      setErrorMsg(""); 
     }
   };
 
@@ -493,7 +492,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     const cleanConfession = filterProfanity(confession);
     let finalImageUrl = null;
 
-    // Upload image if one is selected
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -521,13 +519,11 @@ const ConfessionPopup = ({ open, onClose }) => {
       image_url: finalImageUrl 
     };
 
-    console.log("Inserting confession:", payload);
-
     const { error } = await supabase.from("confessions").insert([payload]);
     
     if (error) {
       console.error("Database Insert Error:", error);
-      setErrorMsg(`DB Error: ${error.message} (Did you create the image_url column?)`);
+      setErrorMsg(`DB Error: ${error.message}`);
     } else {
       setConfession("");
       setImageFile(null);
@@ -673,17 +669,16 @@ const ConfessionPopup = ({ open, onClose }) => {
                           />
                         )}
 
-                        {/* Render Confession Meme Image */}
-                        {msg.image_url && (
+                        {/* Render Confession Meme Image without the restrictive onError that hides it */}
+                        {msg.image_url ? (
                           <Box sx={{ width: '100%', mt: 1, mb: 1 }}>
                             <img 
                                 src={msg.image_url} 
                                 alt="Meme" 
-                                style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', objectFit: 'contain' }} 
-                                onError={(e) => { e.target.style.display = 'none'; console.error("Image failed to load:", msg.image_url); }}
+                                style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', display: 'block' }} 
                             />
                           </Box>
-                        )}
+                        ) : null}
                         
                         <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                             {/* Reactions */}
