@@ -38,7 +38,7 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
 
   const handleSubmit = () => {
     if (!text.trim() && !gifUrl.trim()) return;
-    onSubmit(text, gifUrl); // Pass both text and gifUrl
+    onSubmit(text, gifUrl); 
     setText("");
     setGifUrl("");
     setShowGifInput(false);
@@ -68,7 +68,7 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
         <TextField
           fullWidth
           size="small"
-          placeholder="Paste GIF URL here..."
+          placeholder="Paste GIF image URL here (e.g., https://media.tenor.com/...)"
           value={gifUrl}
           onChange={(e) => setGifUrl(e.target.value)}
           sx={{
@@ -127,10 +127,15 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
             </Typography>
           )}
 
-          {/* Render GIF if exists */}
+          {/* Render GIF if exists in the database row */}
           {comment.gif_url && (
             <Box sx={{ mt: 1 }}>
-              <img src={comment.gif_url} alt="GIF reply" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
+              <img 
+                src={comment.gif_url} 
+                alt="GIF reply" 
+                style={{ width: '100%', maxWidth: '250px', borderRadius: '8px', objectFit: 'contain' }} 
+                onError={(e) => { e.target.style.display = 'none'; console.error("GIF failed to load:", comment.gif_url); }}
+              />
             </Box>
           )}
 
@@ -160,7 +165,7 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
                 autoFocus
                 placeholder={`Replying to ${comment.fullName}...`}
                 onSubmit={(text, gifUrl) => {
-                  onReply(text, gifUrl, comment.id); // pass gifUrl
+                  onReply(text, gifUrl, comment.id); 
                   setIsReplying(false);
                 }}
                 onCancel={() => setIsReplying(false)}
@@ -239,6 +244,7 @@ const ConfessionPopup = ({ open, onClose }) => {
     } else {
         setIsAdmin(false);
         setPasskeyInput("");
+        setErrorMsg("");
     }
   }, [open]);
 
@@ -294,7 +300,7 @@ const ConfessionPopup = ({ open, onClose }) => {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (error) console.error("Error fetching:", error);
+    if (error) console.error("Error fetching confessions:", error);
     else {
       setMessages(msgs || []);
       if (msgs?.length > 0) {
@@ -332,10 +338,7 @@ const ConfessionPopup = ({ open, onClose }) => {
         .is("parent_id", null)
         .in("confession_id", ids);
 
-    if (error) {
-        console.error("Error fetching reply counts:", error);
-        return;
-    }
+    if (error) return;
 
     const counts = {};
     ids.forEach(id => counts[id] = 0);
@@ -350,7 +353,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     const map = {};
     const roots = [];
 
-    // Initialize map
     flatComments.forEach(c => {
       map[c.id] = {
         id: c.id,
@@ -358,13 +360,12 @@ const ConfessionPopup = ({ open, onClose }) => {
         fullName: c.full_name,
         avatarUrl: c.avatar_url,
         text: c.text,
-        gif_url: c.gif_url,
+        gif_url: c.gif_url, // Ensure this maps exactly to the DB column
         created_at: c.created_at,
         replies: [] 
       };
     });
 
-    // Link parents and children
     flatComments.forEach(c => {
       if (c.parent_id) {
         if (map[c.parent_id]) {
@@ -415,7 +416,10 @@ const ConfessionPopup = ({ open, onClose }) => {
 
     const { error } = await supabase.from("confession_replies").insert([payload]);
     
-    if (!error) {
+    if (error) {
+      console.error("Error inserting reply:", error);
+      alert(`Failed to save reply: ${error.message}`);
+    } else {
       fetchComments(confessionId);
       if (!parentId) {
         setReplyCounts(prev => ({
@@ -433,9 +437,7 @@ const ConfessionPopup = ({ open, onClose }) => {
       .delete()
       .eq("id", commentId);
 
-    if (error) {
-      console.error("Error deleting reply:", error);
-    } else {
+    if (!error) {
       fetchComments(confessionId);
       fetchReplyCounts([confessionId]);
     }
@@ -478,11 +480,12 @@ const ConfessionPopup = ({ open, onClose }) => {
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+      setErrorMsg(""); // clear previous errors
     }
   };
 
   const handleSubmit = async () => {
-    if (!confession.trim() && !imageFile) return; // allow empty text if there is an image
+    if (!confession.trim() && !imageFile) return; 
     if (limitReached && !isAdmin) return;
 
     setSending(true);
@@ -500,7 +503,8 @@ const ConfessionPopup = ({ open, onClose }) => {
         .upload(`memes/${fileName}`, imageFile);
 
       if (uploadError) {
-        setErrorMsg("Failed to upload image.");
+        console.error("Upload error:", uploadError);
+        setErrorMsg(`Failed to upload image: ${uploadError.message}`);
         setSending(false);
         return;
       }
@@ -517,16 +521,19 @@ const ConfessionPopup = ({ open, onClose }) => {
       image_url: finalImageUrl 
     };
 
+    console.log("Inserting confession:", payload);
+
     const { error } = await supabase.from("confessions").insert([payload]);
     
     if (error) {
-      setErrorMsg("Failed to send.");
+      console.error("Database Insert Error:", error);
+      setErrorMsg(`DB Error: ${error.message} (Did you create the image_url column?)`);
     } else {
       setConfession("");
       setImageFile(null);
       setImagePreview(null);
       if (!isAdmin) setDailyLimit();
-      fetchConfessions();
+      await fetchConfessions();
     }
     setSending(false);
   };
@@ -616,7 +623,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                         </Button>
                         {imagePreview && (
                             <Box sx={{ position: 'relative' }}>
-                                <img src={imagePreview} alt="preview" style={{ height: '40px', borderRadius: '4px' }} />
+                                <img src={imagePreview} alt="preview" style={{ height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
                                 <IconButton 
                                     size="small" 
                                     sx={{ position: 'absolute', top: -10, right: -10, bgcolor: 'rgba(0,0,0,0.7)', color: 'white', width: 20, height: 20 }} 
@@ -635,7 +642,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                         {sending ? "Posting..." : "Confess"}
                     </Button>
                 </Box>
-                {errorMsg && <Typography color="error" variant="caption">{errorMsg}</Typography>}
+                {errorMsg && <Typography sx={{ mt: 1 }} color="error" variant="caption">{errorMsg}</Typography>}
                 </>
             )}
             </Box>
@@ -669,7 +676,12 @@ const ConfessionPopup = ({ open, onClose }) => {
                         {/* Render Confession Meme Image */}
                         {msg.image_url && (
                           <Box sx={{ width: '100%', mt: 1, mb: 1 }}>
-                            <img src={msg.image_url} alt="Meme" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }} />
+                            <img 
+                                src={msg.image_url} 
+                                alt="Meme" 
+                                style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', objectFit: 'contain' }} 
+                                onError={(e) => { e.target.style.display = 'none'; console.error("Image failed to load:", msg.image_url); }}
+                            />
                           </Box>
                         )}
                         
