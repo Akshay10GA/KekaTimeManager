@@ -26,11 +26,10 @@ const STORAGE_KEY_HIDDEN = "keka_sys_pref_log_v2";
 // Storage key for identifying user for reactions/replies
 const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 
-// Available reactions
-const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', '🍌', '🍆', '🍑'];
+// Expanded Available reactions
+const EMOJIS = ['❤️', '🔥', '😂', '💀', '😅', '🥲', '😘', '😡', '😱', '🤡', '👍', '👎', '🍌', '🍆', '🍑'];
 
 // --- REUSABLE MEDIA RENDERER ---
-// This safely renders images/gifs and shows an explicit error if the link is broken
 const MediaRenderer = ({ src, alt, maxHeight = "300px" }) => {
   const [hasError, setHasError] = useState(false);
 
@@ -55,17 +54,14 @@ const MediaRenderer = ({ src, alt, maxHeight = "300px" }) => {
         src={src} 
         alt={alt} 
         style={{ 
-          // Structural overrides to fix global img bleeding
           position: 'relative', 
           zIndex: 1,
           top: 'auto',
           left: 'auto',
-          transform: 'none', // Resets the scaleX(-1) mirroring
-          
-          // Sizing & Appearance
+          transform: 'none', 
           width: '100%', 
           maxWidth: '400px',
-          height: 'auto', // Resets the height: 100%
+          height: 'auto', 
           maxHeight: maxHeight, 
           borderRadius: '8px', 
           objectFit: 'contain',
@@ -114,12 +110,11 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
         }}
       />
       
-      {/* GIF URL Input Field */}
       <Collapse in={showGifInput}>
         <TextField
           fullWidth
           size="small"
-          placeholder="Paste GIF URL (e.g., https://giphy.com/...)"
+          placeholder="Paste GIF URL (e.g., https://media.tenor.com/...)"
           value={gifUrl}
           onChange={(e) => setGifUrl(e.target.value)}
           sx={{
@@ -162,8 +157,9 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
   );
 };
 
-const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => {
+const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId, replyReactions, onReactionOpen, onReactionClick }) => {
   const [isReplying, setIsReplying] = useState(false);
+  const myReactions = replyReactions[comment.id] || { counts: {}, userReaction: null };
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -180,14 +176,31 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
             </Typography>
           )}
 
-          {/* Render GIF safely */}
           <MediaRenderer src={comment.gif_url} alt="Reply GIF" maxHeight="150px" />
 
-          {/* Actions Bar */}
-          <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
+          {/* Reply Action Bar & Reactions */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5, alignItems: 'center' }}>
+            {/* Reaction Chips for Reply */}
+            {Object.entries(myReactions.counts).map(([emoji, count]) => (
+                <Chip 
+                    key={emoji} label={`${emoji} ${count}`} size="small"
+                    onClick={() => onReactionClick(comment.id, emoji)}
+                    sx={{
+                        height: '20px', fontSize: '0.7rem',
+                        bgcolor: myReactions.userReaction === emoji ? 'rgba(247, 137, 0, 0.2)' : 'rgba(255,255,255,0.05)',
+                        color: myReactions.userReaction === emoji ? '#f78900' : '#ccc',
+                        border: myReactions.userReaction === emoji ? '1px solid #f78900' : '1px solid transparent',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                    }}
+                />
+            ))}
+            <IconButton size="small" onClick={(e) => onReactionOpen(e.currentTarget, comment.id)} sx={{ p: 0.5 }}>
+                <span style={{ fontSize: '1rem', color: '#aaa' }}>☺</span>
+            </IconButton>
+
             <Button 
               size="small" onClick={() => setIsReplying(!isReplying)}
-              sx={{ minWidth: 0, p: 0, color: '#888', fontSize: '0.75rem', textTransform: 'none', '&:hover': { color: '#f78900', bgcolor: 'transparent' } }}
+              sx={{ minWidth: 0, p: 0, ml: 1, color: '#888', fontSize: '0.75rem', textTransform: 'none', '&:hover': { color: '#f78900', bgcolor: 'transparent' } }}
             >
               Reply
             </Button>
@@ -224,7 +237,15 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
         <Box sx={{ ml: 2, mt: 1, pl: 2, borderLeft: '2px solid rgba(255,255,255,0.05)' }}>
           {comment.replies.map(reply => (
             <CommentItem 
-              key={reply.id} comment={reply} onReply={onReply} onDelete={onDelete} isAdmin={isAdmin} currentUserId={currentUserId}
+              key={reply.id} 
+              comment={reply} 
+              onReply={onReply} 
+              onDelete={onDelete} 
+              isAdmin={isAdmin} 
+              currentUserId={currentUserId}
+              replyReactions={replyReactions}
+              onReactionOpen={onReactionOpen}
+              onReactionClick={onReactionClick}
             />
           ))}
         </Box>
@@ -238,7 +259,11 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
 const ConfessionPopup = ({ open, onClose }) => {
   const [confession, setConfession] = useState("");
   const [messages, setMessages] = useState([]);
+  
+  // Reaction States
   const [reactions, setReactions] = useState({}); 
+  const [replyReactions, setReplyReactions] = useState({});
+  
   const [replyCounts, setReplyCounts] = useState({}); 
   const [commentsData, setCommentsData] = useState({}); 
   const [expandedComments, setExpandedComments] = useState({}); 
@@ -254,7 +279,7 @@ const ConfessionPopup = ({ open, onClose }) => {
 
   // Reaction Popover State
   const [anchorEl, setAnchorEl] = useState(null);
-  const [activeMsgId, setActiveMsgId] = useState(null);
+  const [activeTarget, setActiveTarget] = useState({ id: null, type: null }); // type: 'confession' or 'reply'
 
   // Image Upload State
   const [imageFile, setImageFile] = useState(null);
@@ -270,7 +295,6 @@ const ConfessionPopup = ({ open, onClose }) => {
     return id;
   }, []);
 
-  // Generate identity
   const currentUser = useMemo(() => {
     const storedName = localStorage.getItem("quizLastUser");
     const displayName = storedName ? storedName : "Anonymous";
@@ -301,9 +325,7 @@ const ConfessionPopup = ({ open, onClose }) => {
         const today = new Date().toDateString();
         setLimitReached(last_entry_date === today);
       }
-    } catch (e) {
-      console.error("System pref error", e);
-    }
+    } catch (e) { console.error("System pref error", e); }
   };
 
   const setDailyLimit = () => {
@@ -317,12 +339,7 @@ const ConfessionPopup = ({ open, onClose }) => {
   };
 
   const filterProfanity = (text) => {
-     const badWords = [
-      "porn", "sex", "boobs", "boob", "dick", "pussy", "mastrubation", "masturbation",
-      "gdtc", "go digital", "godigital",
-      "fuck", "shit", "bitch", "asshole", "bastard", "cunt", "whore", "slut", 
-      "rape", "damn", "cock", "suck", "nigger", "fag", "dyke", "retard", "piss"
-    ];
+     const badWords = ["porn", "sex", "boobs", "boob", "dick", "pussy", "mastrubation", "masturbation", "gdtc", "go digital", "godigital", "fuck", "shit", "bitch", "asshole", "bastard", "cunt", "whore", "slut", "rape", "damn", "cock", "suck", "nigger", "fag", "dyke", "retard", "piss"];
     let cleanedText = text;
     badWords.sort((a, b) => b.length - a.length).forEach((word) => {
       const regex = new RegExp(`\\b${word}\\b`, "gi");
@@ -357,11 +374,7 @@ const ConfessionPopup = ({ open, onClose }) => {
   };
 
   const fetchReactions = async (msgIds) => {
-    const { data, error } = await supabase
-      .from("confession_reactions")
-      .select("confession_id, reaction, user_id")
-      .in("confession_id", msgIds);
-
+    const { data, error } = await supabase.from("confession_reactions").select("confession_id, reaction, user_id").in("confession_id", msgIds);
     if (error) return;
 
     const reactionMap = {};
@@ -374,21 +387,30 @@ const ConfessionPopup = ({ open, onClose }) => {
     });
     setReactions(reactionMap);
   };
+  
+  const fetchReplyReactions = async (replyIds) => {
+    if(!replyIds || replyIds.length === 0) return;
+    const { data, error } = await supabase.from("confession_reply_reactions").select("reply_id, reaction, user_id").in("reply_id", replyIds);
+    if (error) return;
+
+    const reactionMap = {};
+    replyIds.forEach(id => reactionMap[id] = { counts: {}, userReaction: null });
+
+    data.forEach(r => {
+      if (!reactionMap[r.reply_id]) return;
+      reactionMap[r.reply_id].counts[r.reaction] = (reactionMap[r.reply_id].counts[r.reaction] || 0) + 1;
+      if (r.user_id === userId) reactionMap[r.reply_id].userReaction = r.reaction;
+    });
+    setReplyReactions(prev => ({ ...prev, ...reactionMap }));
+  };
 
   const fetchReplyCounts = async (ids) => {
-    const { data, error } = await supabase
-        .from("confession_replies")
-        .select("confession_id")
-        .is("parent_id", null)
-        .in("confession_id", ids);
-
+    const { data, error } = await supabase.from("confession_replies").select("confession_id").is("parent_id", null).in("confession_id", ids);
     if (error) return;
 
     const counts = {};
     ids.forEach(id => counts[id] = 0);
-    data.forEach(row => {
-        counts[row.confession_id] = (counts[row.confession_id] || 0) + 1;
-    });
+    data.forEach(row => { counts[row.confession_id] = (counts[row.confession_id] || 0) + 1; });
     setReplyCounts(counts);
   };
 
@@ -398,22 +420,14 @@ const ConfessionPopup = ({ open, onClose }) => {
 
     flatComments.forEach(c => {
       map[c.id] = {
-        id: c.id,
-        userId: c.user_id,
-        fullName: c.full_name,
-        avatarUrl: c.avatar_url,
-        text: c.text,
-        gif_url: c.gif_url, 
-        created_at: c.created_at,
-        replies: [] 
+        id: c.id, userId: c.user_id, fullName: c.full_name, avatarUrl: c.avatar_url,
+        text: c.text, gif_url: c.gif_url, created_at: c.created_at, replies: [] 
       };
     });
 
     flatComments.forEach(c => {
       if (c.parent_id) {
-        if (map[c.parent_id]) {
-          map[c.parent_id].replies.push(map[c.id]);
-        }
+        if (map[c.parent_id]) map[c.parent_id].replies.push(map[c.id]);
       } else {
         roots.push(map[c.id]);
       }
@@ -429,10 +443,8 @@ const ConfessionPopup = ({ open, onClose }) => {
       .order("created_at", { ascending: true });
 
     if (!error && data) {
-      setCommentsData(prev => ({
-        ...prev,
-        [confessionId]: buildCommentTree(data)
-      }));
+      fetchReplyReactions(data.map(c => c.id));
+      setCommentsData(prev => ({ ...prev, [confessionId]: buildCommentTree(data) }));
     }
   };
 
@@ -448,79 +460,92 @@ const ConfessionPopup = ({ open, onClose }) => {
     let finalText = text ? filterProfanity(text) : "";
 
     const payload = {
-      confession_id: confessionId,
-      user_id: currentUser.userId,
-      text: finalText,
-      gif_url: gifUrl || null, 
-      parent_id: parentId, 
-      full_name: currentUser.name,
-      avatar_url: currentUser.avatarUrl
+      confession_id: confessionId, user_id: currentUser.userId, text: finalText,
+      gif_url: gifUrl || null, parent_id: parentId, full_name: currentUser.name, avatar_url: currentUser.avatarUrl
     };
 
     const { error } = await supabase.from("confession_replies").insert([payload]);
-    
     if (error) {
       alert(`Failed to save reply: ${error.message}`);
     } else {
       fetchComments(confessionId);
-      if (!parentId) {
-        setReplyCounts(prev => ({
-            ...prev, [confessionId]: (prev[confessionId] || 0) + 1
-        }));
-      }
+      if (!parentId) setReplyCounts(prev => ({ ...prev, [confessionId]: (prev[confessionId] || 0) + 1 }));
     }
   };
 
   const handleDeleteComment = async (commentId, confessionId) => {
     if (!window.confirm("Delete this reply?")) return;
-
-    const { error } = await supabase
-      .from("confession_replies")
-      .delete()
-      .eq("id", commentId);
-
+    const { error } = await supabase.from("confession_replies").delete().eq("id", commentId);
     if (!error) {
       fetchComments(confessionId);
       fetchReplyCounts([confessionId]);
     }
   };
 
-  const handleReactionClick = async (msgId, emoji) => {
-    setAnchorEl(null);
-    setActiveMsgId(null);
-    const currentData = reactions[msgId] || { counts: {}, userReaction: null };
-    const oldReaction = currentData.userReaction;
-    const isRemoving = oldReaction === emoji;
-    const newReaction = isRemoving ? null : emoji;
+  // Unified reaction handler for both Confessions and Replies
+  const handleReactionClick = async (emoji, isDirectClick = false, overrideTarget = null) => {
+    const target = isDirectClick ? overrideTarget : activeTarget;
+    if(!isDirectClick) {
+        setAnchorEl(null);
+        setActiveTarget({ id: null, type: null });
+    }
 
-    setReactions(prev => {
-      const newState = { ...prev };
-      const msgState = { ...newState[msgId], counts: { ...newState[msgId].counts } };
-      if (oldReaction) {
-        msgState.counts[oldReaction] = Math.max(0, (msgState.counts[oldReaction] || 0) - 1);
-        if (msgState.counts[oldReaction] === 0) delete msgState.counts[oldReaction];
-      }
-      if (newReaction) msgState.counts[newReaction] = (msgState.counts[newReaction] || 0) + 1;
-      msgState.userReaction = newReaction;
-      newState[msgId] = msgState;
-      return newState;
-    });
+    const { id: targetId, type: targetType } = target;
+    
+    if (targetType === 'confession') {
+        const currentData = reactions[targetId] || { counts: {}, userReaction: null };
+        const oldReaction = currentData.userReaction;
+        const isRemoving = oldReaction === emoji;
+        const newReaction = isRemoving ? null : emoji;
 
-    try {
-      if (isRemoving) {
-        await supabase.from("confession_reactions").delete().match({ confession_id: msgId, user_id: userId });
-      } else {
-        await supabase.from("confession_reactions").upsert({ confession_id: msgId, user_id: userId, reaction: emoji });
-      }
-    } catch (err) { console.error(err); }
+        setReactions(prev => {
+          const newState = { ...prev };
+          const msgState = { ...newState[targetId], counts: { ...newState[targetId].counts } };
+          if (oldReaction) {
+            msgState.counts[oldReaction] = Math.max(0, (msgState.counts[oldReaction] || 0) - 1);
+            if (msgState.counts[oldReaction] === 0) delete msgState.counts[oldReaction];
+          }
+          if (newReaction) msgState.counts[newReaction] = (msgState.counts[newReaction] || 0) + 1;
+          msgState.userReaction = newReaction;
+          newState[targetId] = msgState;
+          return newState;
+        });
+
+        try {
+          if (isRemoving) await supabase.from("confession_reactions").delete().match({ confession_id: targetId, user_id: userId });
+          else await supabase.from("confession_reactions").upsert({ confession_id: targetId, user_id: userId, reaction: emoji });
+        } catch (err) { console.error(err); }
+        
+    } else if (targetType === 'reply') {
+        const currentData = replyReactions[targetId] || { counts: {}, userReaction: null };
+        const oldReaction = currentData.userReaction;
+        const isRemoving = oldReaction === emoji;
+        const newReaction = isRemoving ? null : emoji;
+
+        setReplyReactions(prev => {
+          const newState = { ...prev };
+          const msgState = { ...(newState[targetId] || { counts: {} }), counts: { ...((newState[targetId] || {}).counts || {}) } };
+          if (oldReaction) {
+            msgState.counts[oldReaction] = Math.max(0, (msgState.counts[oldReaction] || 0) - 1);
+            if (msgState.counts[oldReaction] === 0) delete msgState.counts[oldReaction];
+          }
+          if (newReaction) msgState.counts[newReaction] = (msgState.counts[newReaction] || 0) + 1;
+          msgState.userReaction = newReaction;
+          newState[targetId] = msgState;
+          return newState;
+        });
+
+        try {
+          if (isRemoving) await supabase.from("confession_reply_reactions").delete().match({ reply_id: targetId, user_id: userId });
+          else await supabase.from("confession_reply_reactions").upsert({ reply_id: targetId, user_id: userId, reaction: emoji });
+        } catch (err) { console.error(err); }
+    }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      
-      // Override the global absolute img styling even on the tiny preview thumbnail
       setImagePreview(URL.createObjectURL(file));
       setErrorMsg(""); 
     }
@@ -538,29 +563,18 @@ const ConfessionPopup = ({ open, onClose }) => {
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      
-      const { data, error: uploadError } = await supabase.storage
-        .from('confession_media')
-        .upload(`memes/${fileName}`, imageFile);
+      const { data, error: uploadError } = await supabase.storage.from('confession_media').upload(`memes/${fileName}`, imageFile);
 
       if (uploadError) {
         setErrorMsg(`Failed to upload image: ${uploadError.message}`);
         setSending(false);
         return;
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('confession_media')
-        .getPublicUrl(`memes/${fileName}`);
-        
+      const { data: { publicUrl } } = supabase.storage.from('confession_media').getPublicUrl(`memes/${fileName}`);
       finalImageUrl = publicUrl;
     }
 
-    const payload = { 
-      content: cleanConfession,
-      image_url: finalImageUrl 
-    };
-
+    const payload = { content: cleanConfession, image_url: finalImageUrl };
     const { error } = await supabase.from("confessions").insert([payload]);
     
     if (error) {
@@ -666,7 +680,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                                     src={imagePreview} 
                                     alt="preview" 
                                     style={{ 
-                                        position: 'relative', // Resetting global absolute
+                                        position: 'relative',
                                         zIndex: 1, 
                                         height: '36px', 
                                         width: '36px', 
@@ -733,7 +747,6 @@ const ConfessionPopup = ({ open, onClose }) => {
                           </Typography>
                         )}
 
-                        {/* Confession Meme Image */}
                         <MediaRenderer src={msg.image_url} alt="Confession Meme" maxHeight="350px" />
                         
                         {/* Action Bar (Reactions + Reply Toggle) */}
@@ -742,7 +755,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                                 {Object.entries(msgReactions.counts).map(([emoji, count]) => (
                                     <Chip 
                                         key={emoji} label={`${emoji} ${count}`} size="small"
-                                        onClick={() => handleReactionClick(msg.id, emoji)}
+                                        onClick={() => handleReactionClick(emoji, true, { id: msg.id, type: 'confession' })}
                                         sx={{
                                             height: '24px', fontSize: '0.8rem',
                                             bgcolor: msgReactions.userReaction === emoji ? 'rgba(247, 137, 0, 0.2)' : 'rgba(255,255,255,0.05)',
@@ -752,7 +765,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                                         }}
                                     />
                                 ))}
-                                <IconButton size="small" onClick={(e) => { setAnchorEl(e.currentTarget); setActiveMsgId(msg.id); }}>
+                                <IconButton size="small" onClick={(e) => { setAnchorEl(e.currentTarget); setActiveTarget({ id: msg.id, type: 'confession' }); }}>
                                     <span style={{ fontSize: '1.2rem', color: '#aaa' }}>☺</span>
                                 </IconButton>
                             </Box>
@@ -762,24 +775,16 @@ const ConfessionPopup = ({ open, onClose }) => {
                                 sx={{ color: isCommentsOpen ? '#f78900' : '#aaa', textTransform: 'none', fontWeight: isCommentsOpen ? 'bold' : 'normal' }}
                                 onClick={() => toggleComments(msg.id)}
                             >
-                                {isCommentsOpen 
-                                    ? "Hide Replies" 
-                                    : (replyCount > 0 ? `Replies (${replyCount})` : "Reply")
-                                }
+                                {isCommentsOpen ? "Hide Replies" : (replyCount > 0 ? `Replies (${replyCount})` : "Reply")}
                             </Button>
                         </Box>
 
                         {/* Collapsible Comments Section */}
                         <Collapse in={isCommentsOpen} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 2 }}>
                             <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 2, borderLeft: '3px solid #f78900' }}>
-                                {/* Main Input for this confession */}
-                                <CommentInput 
-                                    onSubmit={(text, gifUrl) => handleCommentSubmit(text, gifUrl, msg.id, null)} 
-                                />
-                                
+                                <CommentInput onSubmit={(text, gifUrl) => handleCommentSubmit(text, gifUrl, msg.id, null)} />
                                 <Divider sx={{ my: 2, borderColor: '#444' }} />
 
-                                {/* Render existing nested comments */}
                                 {nestedComments.length === 0 ? (
                                     <Typography variant="caption" color="#666" sx={{ display:'block', textAlign: 'center' }}>
                                         No replies yet.
@@ -793,6 +798,12 @@ const ConfessionPopup = ({ open, onClose }) => {
                                             onDelete={(commentId) => handleDeleteComment(commentId, msg.id)}
                                             isAdmin={isAdmin}
                                             currentUserId={currentUser.userId}
+                                            replyReactions={replyReactions}
+                                            onReactionOpen={(targetEl, replyId) => {
+                                                setAnchorEl(targetEl);
+                                                setActiveTarget({ id: replyId, type: 'reply' });
+                                            }}
+                                            onReactionClick={(replyId, emoji) => handleReactionClick(emoji, true, { id: replyId, type: 'reply'})}
                                         />
                                     ))
                                 )}
@@ -809,12 +820,12 @@ const ConfessionPopup = ({ open, onClose }) => {
       <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
-        onClose={() => { setAnchorEl(null); setActiveMsgId(null); }}
+        onClose={() => { setAnchorEl(null); setActiveTarget({ id: null, type: null }); }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        PaperProps={{ sx: { bgcolor: '#2a2a2a', border: '1px solid #444', p: 1, display: 'flex', gap: 1, borderRadius: 2 } }}
+        PaperProps={{ sx: { bgcolor: '#2a2a2a', border: '1px solid #444', p: 1, display: 'flex', gap: 1, borderRadius: 2, maxWidth: '300px', flexWrap: 'wrap' } }}
       >
         {EMOJIS.map(emoji => (
-            <IconButton key={emoji} onClick={() => handleReactionClick(activeMsgId, emoji)} sx={{ fontSize: '1.3rem', '&:hover': { transform: 'scale(1.2)' } }}>
+            <IconButton key={emoji} onClick={() => handleReactionClick(emoji)} sx={{ fontSize: '1.3rem', '&:hover': { transform: 'scale(1.2)' }, p: 0.5 }}>
                 {emoji}
             </IconButton>
         ))}
