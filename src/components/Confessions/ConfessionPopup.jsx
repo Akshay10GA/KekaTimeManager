@@ -119,7 +119,7 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
         <TextField
           fullWidth
           size="small"
-          placeholder="Paste GIF URL (e.g., https://media.tenor.com/...)"
+          placeholder="Paste GIF URL (e.g., https://giphy.com/...)"
           value={gifUrl}
           onChange={(e) => setGifUrl(e.target.value)}
           sx={{
