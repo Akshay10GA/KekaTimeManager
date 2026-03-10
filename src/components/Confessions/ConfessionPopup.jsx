@@ -33,11 +33,15 @@ const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', 
 
 const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", autoFocus = false }) => {
   const [text, setText] = useState("");
+  const [showGifInput, setShowGifInput] = useState(false);
+  const [gifUrl, setGifUrl] = useState("");
 
   const handleSubmit = () => {
-    if (!text.trim()) return;
-    onSubmit(text);
+    if (!text.trim() && !gifUrl.trim()) return;
+    onSubmit(text, gifUrl); // Pass both text and gifUrl
     setText("");
+    setGifUrl("");
+    setShowGifInput(false);
   };
 
   return (
@@ -60,25 +64,46 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
           }
         }}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        {onCancel && (
-          <Button 
-            size="small" 
-            onClick={onCancel}
-            sx={{ color: '#aaa', textTransform: 'none' }}
-          >
-            Cancel
-          </Button>
-        )}
+      {showGifInput && (
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Paste GIF URL here..."
+          value={gifUrl}
+          onChange={(e) => setGifUrl(e.target.value)}
+          sx={{
+            backgroundColor: '#2a2a2a',
+            '& .MuiOutlinedInput-root': {
+              color: '#f78900',
+              '& fieldset': { borderColor: '#555' },
+            }
+          }}
+        />
+      )}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button 
-          variant="contained" 
           size="small" 
-          onClick={handleSubmit}
-          disabled={!text.trim()}
-          sx={{ bgcolor: '#f78900', '&:hover': { bgcolor: '#d67600' }, textTransform: 'none' }}
+          onClick={() => setShowGifInput(!showGifInput)}
+          sx={{ color: showGifInput ? '#aaa' : '#f78900', textTransform: 'none' }}
         >
-          Post
+          {showGifInput ? "Remove GIF" : "Add GIF (URL)"}
         </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {onCancel && (
+            <Button size="small" onClick={onCancel} sx={{ color: '#aaa', textTransform: 'none' }}>
+              Cancel
+            </Button>
+          )}
+          <Button 
+            variant="contained" 
+            size="small" 
+            onClick={handleSubmit}
+            disabled={!text.trim() && !gifUrl.trim()}
+            sx={{ bgcolor: '#f78900', '&:hover': { bgcolor: '#d67600' }, textTransform: 'none' }}
+          >
+            Post
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
@@ -96,49 +121,32 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
           sx={{ width: 28, height: 28, bgcolor: '#f78900' }}
         />
         <Box sx={{ flex: 1 }}>
-          {/* Header: Name + Time */}
-          {/* <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-            <Typography variant="subtitle2" sx={{ color: '#f78900', fontWeight: 'bold', fontSize: '0.9rem' }}>
-              {comment.fullName}
+          {comment.text && (
+            <Typography variant="body2" sx={{ color: '#e0e0e0', whiteSpace: 'pre-wrap', wordBreak: 'break-word', mt: 0.5 }}>
+              {comment.text}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
-              {new Date(comment.created_at).toLocaleDateString()}
-            </Typography>
-          </Box> */}
+          )}
 
-          {/* Comment Text */}
-          <Typography variant="body2" sx={{ color: '#e0e0e0', whiteSpace: 'pre-wrap', wordBreak: 'break-word', mt: 0.5 }}>
-            {comment.text}
-          </Typography>
+          {/* Render GIF if exists */}
+          {comment.gif_url && (
+            <Box sx={{ mt: 1 }}>
+              <img src={comment.gif_url} alt="GIF reply" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
+            </Box>
+          )}
 
           {/* Actions Bar */}
           <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
             <Button 
-              size="small" 
-              onClick={() => setIsReplying(!isReplying)}
-              sx={{ 
-                minWidth: 0, p: 0, 
-                color: '#888', 
-                fontSize: '0.75rem', 
-                textTransform: 'none',
-                '&:hover': { color: '#f78900', bgcolor: 'transparent' } 
-              }}
+              size="small" onClick={() => setIsReplying(!isReplying)}
+              sx={{ minWidth: 0, p: 0, color: '#888', fontSize: '0.75rem', textTransform: 'none', '&:hover': { color: '#f78900', bgcolor: 'transparent' } }}
             >
               Reply
             </Button>
             
-            {/* Show delete if Admin OR if it's the current user's comment */}
             {(isAdmin || currentUserId === comment.userId) && (
               <Button 
-                size="small" 
-                onClick={() => onDelete(comment.id)}
-                sx={{ 
-                  minWidth: 0, p: 0, 
-                  color: '#888', 
-                  fontSize: '0.75rem', 
-                  textTransform: 'none',
-                  '&:hover': { color: '#ff4444', bgcolor: 'transparent' } 
-                }}
+                size="small" onClick={() => onDelete(comment.id)}
+                sx={{ minWidth: 0, p: 0, color: '#888', fontSize: '0.75rem', textTransform: 'none', '&:hover': { color: '#ff4444', bgcolor: 'transparent' } }}
               >
                 Delete
               </Button>
@@ -151,8 +159,8 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
               <CommentInput 
                 autoFocus
                 placeholder={`Replying to ${comment.fullName}...`}
-                onSubmit={(text) => {
-                  onReply(text, comment.id);
+                onSubmit={(text, gifUrl) => {
+                  onReply(text, gifUrl, comment.id); // pass gifUrl
                   setIsReplying(false);
                 }}
                 onCancel={() => setIsReplying(false)}
@@ -167,12 +175,7 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
         <Box sx={{ ml: 2, mt: 1, pl: 2, borderLeft: '2px solid rgba(255,255,255,0.05)' }}>
           {comment.replies.map(reply => (
             <CommentItem 
-              key={reply.id} 
-              comment={reply} 
-              onReply={onReply} 
-              onDelete={onDelete} 
-              isAdmin={isAdmin}
-              currentUserId={currentUserId}
+              key={reply.id} comment={reply} onReply={onReply} onDelete={onDelete} isAdmin={isAdmin} currentUserId={currentUserId}
             />
           ))}
         </Box>
