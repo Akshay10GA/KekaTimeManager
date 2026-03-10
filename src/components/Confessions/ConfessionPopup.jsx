@@ -29,95 +29,6 @@ const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 // Available reactions
 const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', '🍌', '🍆', '🍑'];
 
-// Add these new states near the top
-const [imageFile, setImageFile] = useState(null);
-const [imagePreview, setImagePreview] = useState(null);
-
-// Add this handler for image selection
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  }
-};
-
-// Update handleCommentSubmit to accept gifUrl
-const handleCommentSubmit = async (text, gifUrl, confessionId, parentId = null) => {
-  let finalText = text ? filterProfanity(text) : "";
-
-  const payload = {
-    confession_id: confessionId,
-    user_id: currentUser.userId,
-    text: finalText,
-    gif_url: gifUrl || null, // new field
-    parent_id: parentId, 
-    full_name: currentUser.name,
-    avatar_url: currentUser.avatarUrl
-  };
-
-  const { error } = await supabase.from("confession_replies").insert([payload]);
-  
-  if (!error) {
-    fetchComments(confessionId);
-    if (!parentId) {
-      setReplyCounts(prev => ({
-          ...prev, [confessionId]: (prev[confessionId] || 0) + 1
-      }));
-    }
-  }
-};
-
-// Update handleSubmit to process the image upload
-const handleSubmit = async () => {
-  if (!confession.trim() && !imageFile) return; // allow empty text if there is an image
-  if (limitReached && !isAdmin) return;
-
-  setSending(true);
-  setErrorMsg("");
-  const cleanConfession = filterProfanity(confession);
-  let finalImageUrl = null;
-
-  // Upload image if one is selected
-  if (imageFile) {
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    
-    const { data, error: uploadError } = await supabase.storage
-      .from('confession_media')
-      .upload(`memes/${fileName}`, imageFile);
-
-    if (uploadError) {
-      setErrorMsg("Failed to upload image.");
-      setSending(false);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('confession_media')
-      .getPublicUrl(`memes/${fileName}`);
-      
-    finalImageUrl = publicUrl;
-  }
-
-  const payload = { 
-    content: cleanConfession,
-    image_url: finalImageUrl // new field
-  };
-
-  const { error } = await supabase.from("confessions").insert([payload]);
-  
-  if (error) {
-    setErrorMsg("Failed to send.");
-  } else {
-    setConfession("");
-    setImageFile(null);
-    setImagePreview(null);
-    if (!isAdmin) setDailyLimit();
-    fetchConfessions();
-  }
-  setSending(false);
-};
 
 // --- CUSTOM COMMENT COMPONENTS ---
 
@@ -296,6 +207,97 @@ const ConfessionPopup = ({ open, onClose }) => {
   // Reaction Popover State
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeMsgId, setActiveMsgId] = useState(null);
+
+  // Add these new states near the top
+const [imageFile, setImageFile] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+
+// Add this handler for image selection
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
+};
+
+// Update handleCommentSubmit to accept gifUrl
+const handleCommentSubmit = async (text, gifUrl, confessionId, parentId = null) => {
+  let finalText = text ? filterProfanity(text) : "";
+
+  const payload = {
+    confession_id: confessionId,
+    user_id: currentUser.userId,
+    text: finalText,
+    gif_url: gifUrl || null, // new field
+    parent_id: parentId, 
+    full_name: currentUser.name,
+    avatar_url: currentUser.avatarUrl
+  };
+
+  const { error } = await supabase.from("confession_replies").insert([payload]);
+  
+  if (!error) {
+    fetchComments(confessionId);
+    if (!parentId) {
+      setReplyCounts(prev => ({
+          ...prev, [confessionId]: (prev[confessionId] || 0) + 1
+      }));
+    }
+  }
+};
+
+// Update handleSubmit to process the image upload
+const handleSubmit = async () => {
+  if (!confession.trim() && !imageFile) return; // allow empty text if there is an image
+  if (limitReached && !isAdmin) return;
+
+  setSending(true);
+  setErrorMsg("");
+  const cleanConfession = filterProfanity(confession);
+  let finalImageUrl = null;
+
+  // Upload image if one is selected
+  if (imageFile) {
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    
+    const { data, error: uploadError } = await supabase.storage
+      .from('confession_media')
+      .upload(`memes/${fileName}`, imageFile);
+
+    if (uploadError) {
+      setErrorMsg("Failed to upload image.");
+      setSending(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('confession_media')
+      .getPublicUrl(`memes/${fileName}`);
+      
+    finalImageUrl = publicUrl;
+  }
+
+  const payload = { 
+    content: cleanConfession,
+    image_url: finalImageUrl // new field
+  };
+
+  const { error } = await supabase.from("confessions").insert([payload]);
+  
+  if (error) {
+    setErrorMsg("Failed to send.");
+  } else {
+    setConfession("");
+    setImageFile(null);
+    setImagePreview(null);
+    if (!isAdmin) setDailyLimit();
+    fetchConfessions();
+  }
+  setSending(false);
+};
+
 
   // Get or Create Persistent User ID
   const userId = useMemo(() => {
