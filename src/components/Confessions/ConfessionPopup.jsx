@@ -29,24 +29,20 @@ const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 // Available reactions
 const EMOJIS = ['😅', '😂', '🥲', '😘', '😡', '😱', '🖕', '👍', '🍌', '🍆', '🍑'];
 
-// --- CUSTOM COMPONENTS ---
-
-// New SafeImage Component to catch and display loading errors!
-const SafeImage = ({ src, alt, style, isSupabase }) => {
+// --- REUSABLE MEDIA RENDERER ---
+// This safely renders images/gifs and shows an explicit error if the link is broken
+const MediaRenderer = ({ src, alt, maxHeight = "300px" }) => {
   const [hasError, setHasError] = useState(false);
 
   if (!src) return null;
 
   if (hasError) {
     return (
-      <Box sx={{ p: 1.5, border: '1px dashed #ff4444', borderRadius: 1, bgcolor: 'rgba(255,0,0,0.05)', mt: 1 }}>
-        <Typography color="error" variant="caption" display="block" fontWeight="bold">
-          ⚠️ {isSupabase ? "Meme Image" : "GIF"} failed to load.
+      <Box sx={{ mt: 1, p: 1, border: '1px solid #ff4444', borderRadius: 1, bgcolor: 'rgba(255,0,0,0.1)' }}>
+        <Typography variant="caption" color="error" display="block">
+          ⚠️ Failed to load media. (Check if Supabase bucket is Public)
         </Typography>
-        <Typography color="#aaa" variant="caption" sx={{ wordBreak: 'break-all' }}>
-          {isSupabase ? "Check if your 'confession_media' bucket in Supabase is set to PUBLIC." : "The URL might be invalid or blocked by the source."}
-        </Typography>
-        <Typography color="#666" variant="caption" display="block" sx={{ mt: 0.5, wordBreak: 'break-all' }}>
+        <Typography variant="caption" color="#aaa" sx={{ wordBreak: 'break-all' }}>
           Link: {src}
         </Typography>
       </Box>
@@ -54,16 +50,35 @@ const SafeImage = ({ src, alt, style, isSupabase }) => {
   }
 
   return (
-    <Box sx={{ mt: 1, mb: 1 }}>
+    <Box sx={{ width: '100%', mt: 1, mb: 1, display: 'flex', justifyContent: 'flex-start' }}>
       <img 
         src={src} 
         alt={alt} 
-        style={{ ...style, display: 'block' }} 
-        onError={() => setHasError(true)} 
+        style={{ 
+          // Structural overrides to fix global img bleeding
+          position: 'relative', 
+          zIndex: 1,
+          top: 'auto',
+          left: 'auto',
+          transform: 'none', // Resets the scaleX(-1) mirroring
+          
+          // Sizing & Appearance
+          width: '100%', 
+          maxWidth: '400px',
+          height: 'auto', // Resets the height: 100%
+          maxHeight: maxHeight, 
+          borderRadius: '8px', 
+          objectFit: 'contain',
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          display: 'block'
+        }} 
+        onError={() => setHasError(true)}
       />
     </Box>
   );
 };
+
+// --- CUSTOM COMMENT COMPONENTS ---
 
 const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", autoFocus = false }) => {
   const [text, setText] = useState("");
@@ -79,7 +94,7 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1, p: 1.5, bgcolor: 'rgba(0,0,0,0.15)', borderRadius: 1 }}>
       <TextField
         fullWidth
         multiline
@@ -98,14 +113,17 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
           }
         }}
       />
-      {showGifInput && (
+      
+      {/* GIF URL Input Field */}
+      <Collapse in={showGifInput}>
         <TextField
           fullWidth
           size="small"
-          placeholder="Paste direct GIF/Image URL (e.g., https://media.tenor.com/...)"
+          placeholder="Paste GIF URL (e.g., https://media.tenor.com/...)"
           value={gifUrl}
           onChange={(e) => setGifUrl(e.target.value)}
           sx={{
+            mt: 1,
             backgroundColor: '#2a2a2a',
             '& .MuiOutlinedInput-root': {
               color: '#f78900',
@@ -113,14 +131,15 @@ const CommentInput = ({ onSubmit, onCancel, placeholder = "Write a reply...", au
             }
           }}
         />
-      )}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      </Collapse>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
         <Button 
           size="small" 
           onClick={() => setShowGifInput(!showGifInput)}
-          sx={{ color: showGifInput ? '#aaa' : '#f78900', textTransform: 'none' }}
+          sx={{ color: showGifInput ? '#aaa' : '#f78900', textTransform: 'none', fontSize: '0.8rem' }}
         >
-          {showGifInput ? "Remove GIF" : "Add GIF (URL)"}
+          {showGifInput ? "✕ Remove GIF" : "+ Add GIF (URL)"}
         </Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {onCancel && (
@@ -162,12 +181,7 @@ const CommentItem = ({ comment, onReply, onDelete, isAdmin, currentUserId }) => 
           )}
 
           {/* Render GIF safely */}
-          <SafeImage 
-            src={comment.gif_url} 
-            alt="GIF reply" 
-            style={{ width: '100%', maxWidth: '250px', borderRadius: '8px' }}
-            isSupabase={false}
-          />
+          <MediaRenderer src={comment.gif_url} alt="Reply GIF" maxHeight="150px" />
 
           {/* Actions Bar */}
           <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
@@ -505,6 +519,8 @@ const ConfessionPopup = ({ open, onClose }) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
+      
+      // Override the global absolute img styling even on the tiny preview thumbnail
       setImagePreview(URL.createObjectURL(file));
       setErrorMsg(""); 
     }
@@ -607,73 +623,88 @@ const ConfessionPopup = ({ open, onClose }) => {
         </DialogTitle>
         
         <DialogContent>
-            <Box sx={{ mb: 3 }}>
-            {limitReached && !isAdmin ? (
-                <Typography variant="body2" sx={{ color: '#ffab40', textAlign: 'center', p: 2, border: '1px dashed #ffab40', borderRadius: 1 }}>
-                Limit reached for today.
-                </Typography>
-            ) : (
-                <>
-                <TextField
-                    fullWidth multiline rows={3}
-                    placeholder={isAdmin ? "Admin Post" : "Type confession..."}
-                    variant="outlined"
-                    value={confession}
-                    onChange={(e) => setConfession(e.target.value)}
-                    sx={{
-                      backgroundColor: 'rgba(255,255,255,0.1)',
-                      input: { color: 'white' },
-                      textarea: { color: 'white' },
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: isAdmin ? '#f78900' : '#555' },
-                        '&:hover fieldset': { borderColor: '#888' },
-                        '&.Mui-focused fieldset': { borderColor: '#f78900' },
-                      }
-                    }}
-                />
-                
-                {/* Image Upload & Preview UI */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Button 
-                            component="label" 
-                            sx={{ color: '#f78900', textTransform: 'none', border: '1px solid #555' }}
-                        >
-                            📷 Add Meme
-                            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
-                        </Button>
-                        {imagePreview && (
-                            <Box sx={{ position: 'relative' }}>
-                                <img src={imagePreview} alt="preview" style={{ height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
-                                <IconButton 
-                                    size="small" 
-                                    sx={{ position: 'absolute', top: -10, right: -10, bgcolor: 'rgba(0,0,0,0.7)', color: 'white', width: 20, height: 20 }} 
-                                    onClick={() => { setImageFile(null); setImagePreview(null); }}
-                                >✕</IconButton>
-                            </Box>
-                        )}
-                    </Box>
+            {/* Top Submission Area */}
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2, border: '1px solid #333' }}>
+              {limitReached && !isAdmin ? (
+                  <Typography variant="body2" sx={{ color: '#ffab40', textAlign: 'center', p: 2, border: '1px dashed #ffab40', borderRadius: 1 }}>
+                  Limit reached for today. Come back tomorrow!
+                  </Typography>
+              ) : (
+                  <>
+                  <TextField
+                      fullWidth multiline rows={3}
+                      placeholder={isAdmin ? "Admin Post" : "Type your confession here..."}
+                      variant="outlined"
+                      value={confession}
+                      onChange={(e) => setConfession(e.target.value)}
+                      sx={{
+                        backgroundColor: 'rgba(0,0,0,0.2)',
+                        input: { color: 'white' },
+                        textarea: { color: 'white' },
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: isAdmin ? '#f78900' : '#444' },
+                          '&:hover fieldset': { borderColor: '#777' },
+                          '&.Mui-focused fieldset': { borderColor: '#f78900' },
+                        }
+                      }}
+                  />
+                  
+                  {/* Image Upload & Preview UI */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Button 
+                              component="label" 
+                              size="small"
+                              sx={{ color: '#f78900', textTransform: 'none', border: '1px solid #555', borderRadius: 1 }}
+                          >
+                              📷 Add Meme
+                              <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+                          </Button>
+                          {imagePreview && (
+                              <Box sx={{ position: 'relative', ml: 1, width: '36px', height: '36px' }}>
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="preview" 
+                                    style={{ 
+                                        position: 'relative', // Resetting global absolute
+                                        zIndex: 1, 
+                                        height: '36px', 
+                                        width: '36px', 
+                                        borderRadius: '4px', 
+                                        objectFit: 'cover',
+                                        transform: 'none', 
+                                        display: 'block' 
+                                    }} 
+                                  />
+                                  <IconButton 
+                                      size="small" 
+                                      sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'rgba(255,0,0,0.8)', color: 'white', width: 16, height: 16, '&:hover': { bgcolor: 'red' }, zIndex: 2 }} 
+                                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                                  >✕</IconButton>
+                              </Box>
+                          )}
+                      </Box>
 
-                    <Button 
-                        variant="contained" 
-                        sx={{ bgcolor: '#f78900', '&:hover': { bgcolor: '#d67600' } }}
-                        onClick={handleSubmit}
-                        disabled={sending || (!confession.trim() && !imageFile)}
-                    >
-                        {sending ? "Posting..." : "Confess"}
-                    </Button>
-                </Box>
-                {errorMsg && <Typography sx={{ mt: 1 }} color="error" variant="caption">{errorMsg}</Typography>}
-                </>
-            )}
+                      <Button 
+                          variant="contained" 
+                          sx={{ bgcolor: '#f78900', fontWeight: 'bold', '&:hover': { bgcolor: '#d67600' } }}
+                          onClick={handleSubmit}
+                          disabled={sending || (!confession.trim() && !imageFile)}
+                      >
+                          {sending ? "Posting..." : "Confess"}
+                      </Button>
+                  </Box>
+                  {errorMsg && <Typography sx={{ mt: 1 }} color="error" variant="caption">{errorMsg}</Typography>}
+                  </>
+              )}
             </Box>
-            <Divider sx={{ bgcolor: '#555', mb: 2 }} />
             
+            {/* Feed Section */}
             {loading ? (
-              <Box display="flex" justifyContent="center" p={2}><CircularProgress size={24} sx={{ color: '#f78900' }} /></Box>
+              <Box display="flex" justifyContent="center" p={4}><CircularProgress size={30} sx={{ color: '#f78900' }} /></Box>
             ) : (
-              <List sx={{ maxHeight: '400px', overflow: 'auto' }}>
-                {messages.length === 0 ? <Typography align="center" color="#777">No confessions.</Typography> : 
+              <List sx={{ maxHeight: '450px', overflow: 'auto', p: 0 }}>
+                {messages.length === 0 ? <Typography align="center" color="#777" sx={{ mt: 4 }}>No confessions yet. Be the first!</Typography> : 
                 messages.map((msg) => {
                     const msgReactions = reactions[msg.id] || { counts: {}, userReaction: null };
                     const isCommentsOpen = !!expandedComments[msg.id];
@@ -681,29 +712,32 @@ const ConfessionPopup = ({ open, onClose }) => {
                     const nestedComments = commentsData[msg.id] || [];
 
                     return (
-                    <ListItem key={msg.id} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 2, borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', position: 'relative', pr: isAdmin ? 5 : 2 }}>
+                    <ListItem key={msg.id} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 2, borderRadius: 2, flexDirection: 'column', alignItems: 'flex-start', position: 'relative', p: 2, pr: isAdmin ? 5 : 2 }}>
                         
-                        {/* Render Confession Text */}
+                        {/* Confession Text Header */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
+                            <Typography variant="caption" sx={{ color: '#666' }}>
+                              {new Date(msg.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                            </Typography>
+                            {isAdmin && (
+                                <IconButton size="small" onClick={() => handleDelete(msg.id)} sx={{ color: '#ff4444', p: 0 }}>
+                                    🗑
+                                </IconButton>
+                            )}
+                        </Box>
+
+                        {/* Confession Text Body */}
                         {msg.content && (
-                          <ListItemText 
-                              primary={msg.content} 
-                              secondary={new Date(msg.created_at).toLocaleString()}
-                              primaryTypographyProps={{ style: { color: '#e0e0e0', wordBreak: 'break-word', whiteSpace: 'pre-wrap' } }}
-                              secondaryTypographyProps={{ style: { color: '#666', fontSize: '0.75rem' } }}
-                              sx={{ width: '100%', mb: 0.5 }}
-                          />
+                          <Typography sx={{ color: '#e0e0e0', wordBreak: 'break-word', whiteSpace: 'pre-wrap', mb: 1, fontSize: '0.95rem' }}>
+                            {msg.content}
+                          </Typography>
                         )}
 
-                        {/* Render Confession Meme Image safely */}
-                        <SafeImage 
-                          src={msg.image_url} 
-                          alt="Meme" 
-                          style={{ width: '100%', maxWidth: '400px', borderRadius: '8px' }}
-                          isSupabase={true}
-                        />
+                        {/* Confession Meme Image */}
+                        <MediaRenderer src={msg.image_url} alt="Confession Meme" maxHeight="350px" />
                         
-                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
-                            {/* Reactions */}
+                        {/* Action Bar (Reactions + Reply Toggle) */}
+                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {Object.entries(msgReactions.counts).map(([emoji, count]) => (
                                     <Chip 
@@ -714,6 +748,7 @@ const ConfessionPopup = ({ open, onClose }) => {
                                             bgcolor: msgReactions.userReaction === emoji ? 'rgba(247, 137, 0, 0.2)' : 'rgba(255,255,255,0.05)',
                                             color: msgReactions.userReaction === emoji ? '#f78900' : '#ccc',
                                             border: msgReactions.userReaction === emoji ? '1px solid #f78900' : '1px solid transparent',
+                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
                                         }}
                                     />
                                 ))}
@@ -722,10 +757,9 @@ const ConfessionPopup = ({ open, onClose }) => {
                                 </IconButton>
                             </Box>
                             
-                            {/* Reply Toggle */}
                             <Button 
                                 size="small" 
-                                sx={{ color: isCommentsOpen ? '#f78900' : '#aaa', textTransform: 'none' }}
+                                sx={{ color: isCommentsOpen ? '#f78900' : '#aaa', textTransform: 'none', fontWeight: isCommentsOpen ? 'bold' : 'normal' }}
                                 onClick={() => toggleComments(msg.id)}
                             >
                                 {isCommentsOpen 
@@ -737,16 +771,18 @@ const ConfessionPopup = ({ open, onClose }) => {
 
                         {/* Collapsible Comments Section */}
                         <Collapse in={isCommentsOpen} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 2 }}>
-                            <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1 }}>
+                            <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 2, borderLeft: '3px solid #f78900' }}>
+                                {/* Main Input for this confession */}
                                 <CommentInput 
                                     onSubmit={(text, gifUrl) => handleCommentSubmit(text, gifUrl, msg.id, null)} 
                                 />
                                 
                                 <Divider sx={{ my: 2, borderColor: '#444' }} />
 
+                                {/* Render existing nested comments */}
                                 {nestedComments.length === 0 ? (
                                     <Typography variant="caption" color="#666" sx={{ display:'block', textAlign: 'center' }}>
-                                        No replies yet. Be the first!
+                                        No replies yet.
                                     </Typography>
                                 ) : (
                                     nestedComments.map(comment => (
@@ -762,12 +798,6 @@ const ConfessionPopup = ({ open, onClose }) => {
                                 )}
                             </Box>
                         </Collapse>
-
-                        {isAdmin && (
-                            <IconButton onClick={() => handleDelete(msg.id)} sx={{ color: '#ff4444', position: 'absolute', right: 4, top: 4 }}>
-                                🗑
-                            </IconButton>
-                        )}
                     </ListItem>
                     )
                 })}
@@ -781,10 +811,10 @@ const ConfessionPopup = ({ open, onClose }) => {
         anchorEl={anchorEl}
         onClose={() => { setAnchorEl(null); setActiveMsgId(null); }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        PaperProps={{ sx: { bgcolor: '#2a2a2a', border: '1px solid #444', p: 1, display: 'flex', gap: 1 } }}
+        PaperProps={{ sx: { bgcolor: '#2a2a2a', border: '1px solid #444', p: 1, display: 'flex', gap: 1, borderRadius: 2 } }}
       >
         {EMOJIS.map(emoji => (
-            <IconButton key={emoji} onClick={() => handleReactionClick(activeMsgId, emoji)} sx={{ fontSize: '1.2rem', '&:hover': { transform: 'scale(1.2)' } }}>
+            <IconButton key={emoji} onClick={() => handleReactionClick(activeMsgId, emoji)} sx={{ fontSize: '1.3rem', '&:hover': { transform: 'scale(1.2)' } }}>
                 {emoji}
             </IconButton>
         ))}
