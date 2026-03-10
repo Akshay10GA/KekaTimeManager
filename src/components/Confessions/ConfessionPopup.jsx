@@ -488,40 +488,40 @@ const handleSubmit = async () => {
     });
   };
 
-  const handleCommentSubmit = async (text, confessionId, parentId = null) => {
-    let finalText = filterProfanity(text);
-    let finalParentId = parentId;
+  // const handleCommentSubmit = async (text, confessionId, parentId = null) => {
+  //   let finalText = filterProfanity(text);
+  //   let finalParentId = parentId;
 
-    // Check for depth limiting or mentions if necessary
-    // (Custom logic: if replying to a nested comment, flat architecture with mentions is often easier, 
-    // but here we support infinite nesting via recursive components, so we pass parentId directly)
+  //   // Check for depth limiting or mentions if necessary
+  //   // (Custom logic: if replying to a nested comment, flat architecture with mentions is often easier, 
+  //   // but here we support infinite nesting via recursive components, so we pass parentId directly)
     
-    // NOTE: To prevent infinite indentation on small screens, you could cap the depth here 
-    // and force a flat structure after N levels, but we'll stick to tree for now.
+  //   // NOTE: To prevent infinite indentation on small screens, you could cap the depth here 
+  //   // and force a flat structure after N levels, but we'll stick to tree for now.
 
-    const payload = {
-      confession_id: confessionId,
-      user_id: currentUser.userId,
-      text: finalText,
-      parent_id: finalParentId, 
-      full_name: currentUser.name,
-      avatar_url: currentUser.avatarUrl
-    };
+  //   const payload = {
+  //     confession_id: confessionId,
+  //     user_id: currentUser.userId,
+  //     text: finalText,
+  //     parent_id: finalParentId, 
+  //     full_name: currentUser.name,
+  //     avatar_url: currentUser.avatarUrl
+  //   };
 
-    const { error } = await supabase.from("confession_replies").insert([payload]);
+  //   const { error } = await supabase.from("confession_replies").insert([payload]);
     
-    if (error) {
-      console.error("Reply error", error);
-    } else {
-      fetchComments(confessionId);
-      if (!finalParentId) {
-        setReplyCounts(prev => ({
-            ...prev,
-            [confessionId]: (prev[confessionId] || 0) + 1
-        }));
-      }
-    }
-  };
+  //   if (error) {
+  //     console.error("Reply error", error);
+  //   } else {
+  //     fetchComments(confessionId);
+  //     if (!finalParentId) {
+  //       setReplyCounts(prev => ({
+  //           ...prev,
+  //           [confessionId]: (prev[confessionId] || 0) + 1
+  //       }));
+  //     }
+  //   }
+  // };
 
   const handleDeleteComment = async (commentId, confessionId) => {
     if (!window.confirm("Delete this reply?")) return;
@@ -572,23 +572,23 @@ const handleSubmit = async () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleSubmit = async () => {
-    if (!confession.trim()) return;
-    if (limitReached && !isAdmin) return;
+  // const handleSubmit = async () => {
+  //   if (!confession.trim()) return;
+  //   if (limitReached && !isAdmin) return;
 
-    setSending(true);
-    setErrorMsg("");
-    const cleanConfession = filterProfanity(confession);
+  //   setSending(true);
+  //   setErrorMsg("");
+  //   const cleanConfession = filterProfanity(confession);
 
-    const { error } = await supabase.from("confessions").insert([{ content: cleanConfession }]);
-    if (error) setErrorMsg("Failed to send.");
-    else {
-      setConfession("");
-      if (!isAdmin) setDailyLimit();
-      fetchConfessions();
-    }
-    setSending(false);
-  };
+  //   const { error } = await supabase.from("confessions").insert([{ content: cleanConfession }]);
+  //   if (error) setErrorMsg("Failed to send.");
+  //   else {
+  //     setConfession("");
+  //     if (!isAdmin) setDailyLimit();
+  //     fetchConfessions();
+  //   }
+  //   setSending(false);
+  // };
 
   const handleAdminLogin = () => {
     if (passkeyInput === import.meta.env.VITE_ADMIN_PASSKEY) {
