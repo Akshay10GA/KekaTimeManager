@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
-import ProgressBar from "../components/ProgressBar/ProgressBar";
-import Cards from "../components/Cards/Cards";
-import TimeInput from "../components/TimeInput/TimeInput";
-import CalculateButton from "../components/CalculateButton/CalculateButton";
-import NewQuiz from "../components/Quiz/NewQuiz";
 import "./KekaTimeManager.css";
 
 const STORAGE_KEY = "keka_input_time";
 const DATE_KEY = "keka_input_date";
 
-const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
+const KekaTimeManager = () => {
   const [dataLoaded, setDataLoaded] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
   
-  // Shift Data State
   const [shiftData, setShiftData] = useState({
     breakTimeApplicable: true,
     shiftEnded: false,
@@ -23,31 +17,21 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
     responseData: null,
   });
 
-  // Time State
   const [currentTime, setCurrentTime] = useState({ h: 0, m: 0, s: 0 });
   const [estimateFinishTime, setEstimateFinishTime] = useState("");
 
-  // --- PERSISTENCE LOGIC START ---
   const [inputValue, setInputValue] = useState(() => {
-    // 1. Try to get saved data
     const savedTime = localStorage.getItem(STORAGE_KEY);
     const savedDate = localStorage.getItem(DATE_KEY);
     const today = new Date().toDateString();
-
-    // 2. Return saved time ONLY if it belongs to today
-    if (savedTime && savedDate === today) {
-      return savedTime;
-    }
-    return "";
+    return (savedTime && savedDate === today) ? savedTime : "";
   });
 
-  // 3. Save to storage whenever input changes
   useEffect(() => {
     const today = new Date().toDateString();
     localStorage.setItem(STORAGE_KEY, inputValue);
     localStorage.setItem(DATE_KEY, today);
   }, [inputValue]);
-  // --- PERSISTENCE LOGIC END ---
 
   const formatTime = (ms) => {
     if (!ms) return "00:00:00";
@@ -62,7 +46,6 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
     const now = new Date();
     const timeStrs = shiftTimesStr.split(',');
     
-    // Parse times
     const timestamps = timeStrs.map(str => {
       if (str === "MISSING") return new Date();
       const [time, period] = str.split(' ');
@@ -75,7 +58,6 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
       return d;
     }).sort((a, b) => a - b);
 
-    // Calculate worked time & breaks
     let totalMs = 0;
     const breakDiffs = [];
     
@@ -89,12 +71,10 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
     const totalBreakMs = breakDiffs.reduce((a, b) => a + b, 0);
     const maxBreakMs = Math.max(0, ...breakDiffs);
 
-    const totalHours = Math.floor(totalMs / 3600000);
-    const totalMinutes = Math.floor((totalMs % 3600000) / 60000);
-    const totalSeconds = Math.floor((totalMs % 60000) / 1000);
-
     return {
-      h: totalHours, m: totalMinutes, s: totalSeconds,
+      h: Math.floor(totalMs / 3600000), 
+      m: Math.floor((totalMs % 3600000) / 60000), 
+      s: Math.floor((totalMs % 60000) / 1000),
       totalBreak: formatTime(totalBreakMs),
       lunchBreak: formatTime(maxBreakMs),
       otherBreak: formatTime(totalBreakMs - maxBreakMs),
@@ -105,7 +85,6 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
 
   const handleSubmit = () => {
     if (!inputValue.trim()) return;
-    
     setDataLoaded(false);
     setEstimateFinishTime("");
     
@@ -120,21 +99,18 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
         totalBreak: res.totalBreak,
         lunchBreak: res.lunchBreak,
         otherBreak: res.otherBreak,
-        responseData: [res.h, res.m, res.s, res.totalBreak, res.lunchBreak, res.otherBreak]
+        responseData: [res.h, res.m, res.s]
       });
       setShowInfo(true);
-      setTimeout(() => setDataLoaded(true), 1500); 
+      setTimeout(() => setDataLoaded(true), 800); 
     } catch (error) {
       console.error(error);
       setDataLoaded(true);
-      setShiftData(prev => ({ ...prev, breakTimeApplicable: false }));
     }
   };
 
-  // Timer Logic
   useEffect(() => {
     if (shiftData.shiftEnded || !showInfo) return;
-
     const interval = setInterval(() => {
       setCurrentTime(prev => {
         let { h, m, s } = prev;
@@ -144,73 +120,120 @@ const KekaTimeManager = ({ showKekaCalculator, showQuiz, setShowQuiz }) => {
         return { h, m, s };
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [shiftData.shiftEnded, showInfo]);
 
-  // Estimate Finish Time Logic
   useEffect(() => {
     if (!showInfo || shiftData.shiftEnded || currentTime.h >= 9) {
-      if (currentTime.h >= 9) setEstimateFinishTime("9 Hr Completed");
+      if (currentTime.h >= 9) setEstimateFinishTime("9 HR COMPLETED");
       return;
     }
-
     const remainingMinutes = (9 * 60) - (currentTime.h * 60 + currentTime.m);
     if (remainingMinutes > 0) {
       const finish = new Date();
       finish.setMinutes(finish.getMinutes() + remainingMinutes);
-      setEstimateFinishTime(finish.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setEstimateFinishTime(finish.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
     } else {
-      setEstimateFinishTime("9 Hr Completed");
+      setEstimateFinishTime("9 HR COMPLETED");
     }
   }, [currentTime.h, currentTime.m, showInfo, shiftData.shiftEnded]);
 
-  useEffect(() => {
-    const handleEnter = (e) => e.key === "Enter" && handleSubmit();
-    document.addEventListener("keydown", handleEnter);
-    return () => document.removeEventListener("keydown", handleEnter);
-  }, [inputValue]);
-
+  const handleEnter = (e) => e.key === "Enter" && handleSubmit();
+  
   const totalHoursDecimal = currentTime.h + (currentTime.m / 60);
+  const progressPercent = Math.min((totalHoursDecimal / 9) * 100, 100).toFixed(1);
+  const isOvertime = currentTime.h >= 9;
 
   return (
-    <>
-      {!dataLoaded && (
-        <div className="logo-row">
-          <img src="/Leaf_logo.png" alt="Logo" className="logo-bounce" />
-          <img src="/Leaf_logo.png" alt="Logo" className="logo-bounce delay1" />
-          <img src="/Leaf_logo.png" alt="Logo" className="logo-bounce delay2" />
-          <img src="/Leaf_logo.png" alt="Logo" className="logo-bounce delay3" />
-        </div>
-      )}
+    <div className={`terminal-wrapper ${!dataLoaded ? "processing" : ""}`}>
       
-      {showKekaCalculator && (
-        <div className={!dataLoaded ? "loader-active" : ""}>
-          <ProgressBar hoursCompleted={totalHoursDecimal} />
-          <br /><br /><br />
-          <Cards
-            showInfo={showInfo}
-            shiftEnded={shiftData.shiftEnded}
-            responseData={shiftData.responseData}
-            currentTime={currentTime}
-            estFinishTime={estimateFinishTime}
-            breakData={shiftData}
+      {/* 1. INPUT TERMINAL (Always at the top for easy access) */}
+      <div className="widget terminal-input-widget mb-4">
+        <div className="widget-header">TIME LOG INPUT // PASTE RAW KEKA DATA</div>
+        <div className="terminal-prompt-container">
+          <span className="prompt-symbol">{">"}</span>
+          <input
+            type="text"
+            className="terminal-input"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleEnter}
+            placeholder="Paste your clock-in/out times here..."
+            autoFocus
           />
-          {showQuiz ? (
-            <NewQuiz setShowQuiz={setShowQuiz} />
+          <button className="execute-btn" onClick={handleSubmit}>CALCULATE</button>
+        </div>
+      </div>
+
+      {/* 2. MAIN DASHBOARD GRID */}
+      <div className="trading-grid">
+        
+        {/* Progress Widget */}
+        <div className="widget highlight-widget">
+          <div className="widget-header">SHIFT PROGRESS // 9 HOUR TARGET</div>
+          <div className="progress-value-large">
+            {currentTime.h.toString().padStart(2, '0')}:
+            {currentTime.m.toString().padStart(2, '0')}:
+            {currentTime.s.toString().padStart(2, '0')}
+          </div>
+          <div className="progress-bar-bg">
+            <div 
+              className={`progress-bar-fill ${isOvertime ? 'overtime' : ''}`} 
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+          <div className="progress-metrics">
+            <span>{progressPercent}% LOGGED</span>
+            <span>{isOvertime ? 'OVERTIME ACTIVE' : 'IN PROGRESS'}</span>
+          </div>
+        </div>
+
+        {/* Shift Details Widget */}
+        <div className="widget">
+          <div className="widget-header">SHIFT DETAILS</div>
+          <div className="stat-row">
+            <span className="stat-key">REMAINING TIME</span>
+            <span className={`stat-val ${isOvertime ? 'alert' : ''}`}>
+              {isOvertime ? "00:00" : `${8 - currentTime.h}h ${60 - currentTime.m}m`}
+            </span>
+          </div>
+          <div className="stat-row">
+            <span className="stat-key">EST. FINISH TIME</span>
+            <span className="stat-val accent">{estimateFinishTime || "--:--"}</span>
+          </div>
+          <div className="stat-row">
+            <span className="stat-key">SHIFT STATUS</span>
+            <span className="stat-val">{shiftData.shiftEnded ? "ENDED" : "ACTIVE"}</span>
+          </div>
+        </div>
+
+        {/* Break Details Widget */}
+        <div className="widget">
+          <div className="widget-header">BREAK BREAKDOWN</div>
+          {shiftData.breakTimeApplicable ? (
+            <div className="analytics-list">
+              <div className="stat-row">
+                <span className="stat-key">TOTAL BREAK</span>
+                <span className="stat-val warning">{shiftData.totalBreak}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-key">LUNCH BREAK</span>
+                <span className="stat-val">{shiftData.lunchBreak}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-key">OTHER BREAKS</span>
+                <span className="stat-val">{shiftData.otherBreak}</span>
+              </div>
+            </div>
           ) : (
-            <>
-              {/* Pass inputValue and setInputValue explicitly */}
-              <TimeInput 
-                value={inputValue} 
-                onInputChange={(e) => setInputValue(e.target.value)} 
-              />
-              <CalculateButton onCalculate={handleSubmit} />
-            </>
+            <div className="terminal-log alert-text" style={{marginTop: '20px', textAlign: 'center'}}>
+              [NO BREAK DATA LOGGED]
+            </div>
           )}
         </div>
-      )}
-    </>
+
+      </div>
+    </div>
   );
 };
 

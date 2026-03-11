@@ -1,73 +1,206 @@
-button {
-  pointer-events: all;
-}
-
-.background-options {
-  top: 15px;
-  position: absolute;
+/* Terminal / Trading Wrapper */
+.terminal-wrapper {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-.background-options button {
-  padding: 10px 25px;
-  border-radius: 25px;
-  color: white;
-  background: transparent;
-  border: 1px solid;
-  cursor: pointer;
-}
-.background-options button:hover {
-  scale: 1.05;
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fadeIn 0.4s ease-out;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Courier New', Courier, monospace;
 }
 
-.loader-active {
+.terminal-wrapper.processing {
   opacity: 0.5;
   pointer-events: none;
+  filter: blur(2px);
+  transition: all 0.2s;
 }
 
-/* New Loader Styles */
-.logo-row {
-  display: flex;
-  gap: 20px;           /* space between images */
-  justify-content: center;
-  align-items: center;
-  margin: 45vh auto;   /* Center vertically approximately */
-  position: absolute;
-  width: 100%;
-  z-index: 10;
+.trading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.logo-bounce {
+.mt-4 {
+  margin-top: 24px;
+}
+
+/* Base Widget Styling */
+.widget {
+  background: rgba(15, 18, 24, 0.7);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 4px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   position: relative;
-  width: 40px;         /* adjust image size */
-  height: auto;
-  animation: logoBounce 2s ease-in-out infinite;
+  overflow: hidden;
 }
 
-/* DELAYS so they animate one after another */
-.delay1 {
-  animation-delay: 0.2s;
-}
-.delay2 {
-  animation-delay: 0.4s;
-}
-.delay3 {
-  animation-delay: 0.6s;
+.widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(74, 222, 128, 0.5);
 }
 
-@keyframes logoBounce {
-  0% {
-    top: 0;
-    opacity: 1;
-  }
-  50% {
-    top: 30px;
-    opacity: 0.2;
-  }
-  100% {
-    top: 0;
-    opacity: 1;
-  }
+.highlight-widget::before {
+  background: #4ade80;
+  box-shadow: 0 0 10px #4ade80;
+}
+
+.widget-header {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: rgba(74, 222, 128, 0.7);
+  margin-bottom: 20px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+/* Progress Tracking Values */
+.progress-value-large {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #4ade80;
+  box-shadow: 0 0 10px #4ade80;
+  transition: width 1s linear;
+}
+
+.progress-bar-fill.overtime {
+  background: #fbbf24;
+  box-shadow: 0 0 10px #fbbf24;
+}
+
+.progress-metrics {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Stat Rows for Quick Stats / Analytics */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-key {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+.stat-val {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.stat-val.accent { color: #4ade80; }
+.stat-val.warning { color: #fbbf24; }
+.stat-val.alert { color: #ef4444; }
+
+/* Terminal Command Input Styling */
+.terminal-input-widget {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.terminal-input-widget::before {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.terminal-prompt-container {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prompt-symbol {
+  color: #4ade80;
+  margin-right: 12px;
+  font-weight: bold;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.terminal-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.execute-btn {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.execute-btn:hover {
+  background: #4ade80;
+  color: #000;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.terminal-log {
+  margin-top: 15px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.alert-text {
+  color: #ef4444;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .progress-value-large { font-size: 2.5rem; }
+  .terminal-prompt-container { flex-direction: column; align-items: stretch; gap: 10px; }
+  .prompt-symbol { display: none; }
 }

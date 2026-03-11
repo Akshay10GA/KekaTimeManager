@@ -1,0 +1,139 @@
+/* Ensure the wrapper uses the full screen width rather than being constrained */
+.full-width-override {
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+.confessions-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.confessions-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Makes the Feed take up twice the space of the Input */
+  gap: 24px;
+  height: calc(100vh - 120px);
+}
+
+/* Invisible backdrop to capture outside clicks for emoji picker */
+.reaction-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9;
+  cursor: default;
+}
+
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.mb-3 { margin-bottom: 15px; }
+.mb-4 { margin-bottom: 24px; }
+.mt-2 { margin-top: 10px; }
+.mt-3 { margin-top: 15px; }
+.mt-4 { margin-top: 24px; }
+.mr-3 { margin-right: 15px; }
+.ml-auto { margin-left: auto; }
+.p-3 { padding: 15px; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.cursor-pointer { cursor: pointer; }
+.border-dashed { border: 1px dashed #ef4444; }
+.relative-container { position: relative; display: inline-block; }
+
+/* Theme Overrides */
+.confessions-input-widget::before,
+.confessions-feed-widget::before { background: rgba(168, 85, 247, 0.5); }
+.purple-header { color: rgba(168, 85, 247, 0.8); border-bottom: 1px dashed rgba(168, 85, 247, 0.3); }
+.purple-text { color: #a855f7 !important; }
+
+.purple-btn {
+  background: rgba(168, 85, 247, 0.1) !important;
+  color: #a855f7 !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+.purple-btn:hover:not(:disabled) {
+  background: #a855f7 !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
+}
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+.secondary-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+.alert-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; }
+.alert-btn:hover { background: #ef4444; color: #000; }
+.action-text-btn { background: none; border: none; color: #888; font-family: monospace; cursor: pointer; font-size: 0.8rem; transition: color 0.2s; }
+.action-text-btn:hover { color: #fff; }
+.action-text-btn.alert-text:hover { color: #ef4444; }
+
+/* Layouts */
+.confession-guidelines { background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 4px; border-left: 3px solid #a855f7; margin-bottom: 20px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
+.confession-guidelines p { margin: 0 0 8px 0; color: #a855f7; }
+.confession-guidelines ul { margin: 0; padding-left: 20px; }
+
+.admin-login-box { display: flex; gap: 10px; background: rgba(239, 68, 68, 0.05); padding: 10px; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; align-items: center; }
+
+.textarea-container { align-items: flex-start !important; height: 150px; }
+.confession-textarea { resize: none; height: 100%; line-height: 1.4; }
+.form-footer { display: flex; justify-content: space-between; align-items: center; }
+
+/* Images */
+.image-preview-box { position: relative; margin-top: 15px; display: inline-block; }
+.image-preview-box img { max-height: 100px; border-radius: 4px; border: 1px solid #444; }
+.image-preview-box button { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 2; }
+
+.confession-media { max-width: 100%; max-height: 350px; border-radius: 4px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); }
+
+/* Feed & Cards */
+.confessions-feed-widget { display: flex; flex-direction: column; }
+.feed-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-right: 10px; }
+
+.confession-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 2px solid rgba(168, 85, 247, 0.5); padding: 16px; border-radius: 4px; transition: all 0.2s ease; }
+.confession-card:hover { background: rgba(255, 255, 255, 0.05); border-left-color: #a855f7; }
+
+.confession-meta { display: flex; gap: 15px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.4); margin-bottom: 10px; font-family: monospace; align-items: center; }
+.confession-id { color: rgba(168, 85, 247, 0.7); }
+.confession-text { font-size: 1rem; line-height: 1.5; color: #e2e8f0; font-family: -apple-system, sans-serif; white-space: pre-wrap; word-break: break-word; }
+
+/* Reactions */
+.reaction-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; }
+.reaction-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.reaction-chip { background: rgba(255,255,255,0.05); border: 1px solid transparent; color: #ccc; border-radius: 12px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px; z-index: 2;}
+.reaction-chip:hover { background: rgba(255,255,255,0.1); }
+.reaction-chip.active { background: rgba(168, 85, 247, 0.2); color: #a855f7; border-color: #a855f7; }
+.add-reaction-btn { background: none; border: 1px dashed rgba(255,255,255,0.3); color: #aaa; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.add-reaction-btn:hover { color: #fff; border-color: #fff; }
+
+.reaction-picker-panel { position: absolute; bottom: 100%; left: 0; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; padding: 8px; display: flex; gap: 5px; flex-wrap: wrap; width: 220px; z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); margin-bottom: 8px; }
+.emoji-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: transform 0.1s; padding: 4px; }
+.emoji-btn:hover { transform: scale(1.3); }
+
+/* Comments */
+.comments-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 4px; border-left: 2px solid #a855f7; }
+.inline-reply-box { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+.inline-reply-box input { flex: 1; border: none; background: transparent; color: #fff; outline: none; font-family: monospace; }
+.comment-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+.comment-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.comment-avatar { width: 24px; height: 24px; border-radius: 50%; }
+.comment-author { font-size: 0.8rem; color: #a855f7; font-weight: bold; }
+.comment-time { font-size: 0.7rem; color: #666; font-family: monospace; }
+.comment-body { font-size: 0.9rem; color: #ccc; margin-left: 34px; margin-bottom: 5px; word-break: break-word;}
+.comment-media { max-width: 200px; border-radius: 4px; margin-left: 34px; display: block; margin-top: 5px; }
+.nested-comments { margin-left: 34px; margin-top: 10px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 15px; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.6); }
+
+@media (max-width: 900px) {
+  .confessions-grid { grid-template-columns: 1fr; height: auto; }
+  .feed-container { max-height: 500px; }
+}

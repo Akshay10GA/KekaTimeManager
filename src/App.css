@@ -1,69 +1,135 @@
 * {
+  box-sizing: border-box;
+}
+
+body {
   margin: 0;
   padding: 0;
-  /* overflow: hidden; */
+  background-color: #050505; /* Deep dark fallback */
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden; /* Prevent body scrolling, handle inside main */
 }
-#root {
-  margin: 0 auto;
-  padding: 0;
-  text-align: center;
-  width: 100vw;
+
+/* Trading Platform Shell Layout */
+.trading-layout {
+  display: flex;
   height: 100vh;
-  overflow: hidden;
-  background: black;
+  width: 100vw;
+  position: relative;
 }
-.app {
+
+/* 3D Canvas Background Tweaks */
+.canvas-wrapper {
   position: absolute;
-  top: 0px;
-  color: white;
-  z-index: 100;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  z-index: 0;
+}
+
+.canvas-section {
+  width: 100%;
+  height: 100%;
+}
+
+/* This makes the 3D models sit behind a dark, sleek glass layer */
+.canvas-dark-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(10, 12, 16, 0.75) 0%, rgba(5, 5, 5, 0.95) 100%);
   pointer-events: none;
 }
 
-:root {
-  --line-border-fill: #0091ff;
-  --line-border-empty: #ff070f;
-  --bar-percentage: 0%;
+/* Main Content Area */
+.trading-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  position: relative;
+  background: rgba(10, 12, 16, 0.4);
 }
 
-.view-change-button {
+/* Top Information Bar */
+.trading-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 12, 16, 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.view-title {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.text-dim {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.market-time {
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+/* Workspace where widgets go */
+.trading-workspace {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for Workspace */
+.trading-workspace::-webkit-scrollbar {
+  width: 8px;
+}
+.trading-workspace::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.trading-workspace::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.trading-workspace::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-modal-overlay {
   position: absolute;
-  height: fit-content;
-  bottom: 50px;
-  left: 50px;
-  padding: 20px;
-  border-radius: 15px;
-  border: 2px solid white;
-  background: transparent;
-  color: white;
-  cursor: pointer;
-  pointer-events: all;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex; justify-content: center; align-items: center;
 }
-
-.joyride-overlay {
-  pointer-events: none !important; /* allow overlay to catch clicks */
+.theme-modal-content {
+  width: 400px;
+  display: flex; flex-direction: column; gap: 10px;
 }
-
-.joyride-hole {
-  pointer-events: none !important; /* allow tooltip interactions only */
+.theme-options {
+  display: flex; flex-direction: column; gap: 10px;
 }
-
-body.joyride-block {
-  pointer-events: none !important; /* block page clicks */
-}
-
-body.joyride-block .react-joyride__tooltip {
-  pointer-events: auto !important; /* allow tooltip interaction */
-}
-
-/* Make overlay block clicks outside the tooltip */
-.react-joyride__overlay {
-  pointer-events: none !important; /* allow overlay to capture clicks */
-}
-
-.react-joyride__spotlight {
-  pointer-events: none !important; /* allow overlay to capture clicks */
+.highlight-btn { border-color: #fbbf24; color: #fbbf24; }
+.highlight-btn:hover { background: #fbbf24; color: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+.placeholder-view {
+  width: 100%; height: 100%;
+  display: flex; justify-content: center; align-items: center;
+  color: rgba(255, 255, 255, 0.5); font-family: monospace; font-size: 1.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 8px;
 }

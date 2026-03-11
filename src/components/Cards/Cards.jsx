@@ -1,14 +1,13 @@
-import blueClockImg from "../../../assets/images/blueClock.png";
-import redClockImg from "../../../assets/images/redClock.png";
+import React from "react";
 import "./Cards.css";
 
-const Cards = ({
+const DashboardPanel = ({
   showInfo,
   shiftEnded,
   responseData,
   currentTime,
   estFinishTime,
-  breakData
+  breakData,
 }) => {
   const { h, m } = currentTime;
   const { breakTimeApplicable, totalBreak, lunchBreak, otherBreak } = breakData;
@@ -17,66 +16,83 @@ const Cards = ({
   const remainingH = 8 - h;
   const remainingM = 60 - m;
   const overtimeH = h - 9;
-  
+  const isOvertime = h >= 9;
+
+  if (!showInfo) return null;
+
   return (
-    <div className="cards-container">
-      <div className="cards-inner-container">
-        {/* Work Time Card */}
-        <div className="main-box-container joyride-blue-clock-position">
-          <div className="box-container">
-            <img src={blueClockImg} alt="Blue Clock" />
-            <h3>Your Time</h3>
-            {showInfo && (
-              <div className="my-time-container">
-                <span className="hour-headings">
-                  Completed: {shiftEnded ? responseData[0] : h} Hours, {shiftEnded ? responseData[1] : m} Minutes
-                </span>
-                <br />
-                {h < 9 ? (
-                  <span className="hour-headings">
-                    Remaining: {shiftEnded ? 8 - responseData[0] : remainingH} Hours, {shiftEnded ? 60 - responseData[1] : remainingM} Minutes
-                  </span>
-                ) : (
-                  <span className="hour-headings">
-                    Overtime: {overtimeH} Hours, {m} Minutes
-                  </span>
-                )}
-                <br />
-                {!shiftEnded && (
-                  <>
-                    <span className="hour-headings">Completes At: {estFinishTime}</span>
-                    <br />
-                    <span className="hour-headings">Current Time: {new Date().toLocaleTimeString()}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+    <div className="dashboard-container">
+      {/* SECTION 1: PRIMARY WORK STATS */}
+      <div className="dashboard-section primary-stats">
+        <div className="stat-block hero-stat">
+          <span className="stat-label">Time Completed</span>
+          <span className="stat-value highlight">
+            {shiftEnded ? responseData[0] : h}
+            <span className="unit">h</span> {shiftEnded ? responseData[1] : m}
+            <span className="unit">m</span>
+          </span>
         </div>
 
-        {/* Break Time Card */}
-        <div className="main-box-container red-clock-position joyride-red-clock-position">
-          <div className="box-container-2">
-            <img src={redClockImg} alt="Red Clock" />
-            <h3>Break Time</h3>
-            {showInfo && (
-              <div className="my-time-container">
-                {breakTimeApplicable ? (
-                  <>
-                    <span className="hour-headings">Total Break: {totalBreak}</span><br />
-                    <span className="hour-headings">Lunch Break: {lunchBreak}</span><br />
-                    <span className="hour-headings">Other Time: {otherBreak}</span>
-                  </>
-                ) : (
-                  <span className="hour-headings">No breaks taken</span>
-                )}
-              </div>
-            )}
-          </div>
+        <div className="stat-block">
+          <span className="stat-label">
+            {isOvertime ? "Overtime" : "Remaining Time"}
+          </span>
+          <span className={`stat-value ${isOvertime ? "overtime-text" : ""}`}>
+            {isOvertime ? overtimeH : shiftEnded ? 8 - responseData[0] : remainingH}
+            <span className="unit">h</span>{" "}
+            {isOvertime ? m : shiftEnded ? 60 - responseData[1] : remainingM}
+            <span className="unit">m</span>
+          </span>
         </div>
+      </div>
+
+      <div className="dashboard-divider"></div>
+
+      {/* SECTION 2: TIMELINE */}
+      <div className="dashboard-section timeline-stats">
+        {!shiftEnded && (
+          <div className="stat-block">
+            <span className="stat-label">Estimated Finish</span>
+            <span className="stat-value small-value">{estFinishTime}</span>
+          </div>
+        )}
+        <div className="stat-block">
+          <span className="stat-label">Current Time</span>
+          <span className="stat-value small-value">
+            {new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      </div>
+
+      <div className="dashboard-divider"></div>
+
+      {/* SECTION 3: BREAKS */}
+      <div className="dashboard-section break-stats">
+        <div className="section-title">Break Breakdown</div>
+        {breakTimeApplicable ? (
+          <div className="break-grid">
+            <div className="break-item">
+              <span className="break-label">Total Break</span>
+              <span className="break-val">{totalBreak}</span>
+            </div>
+            <div className="break-item">
+              <span className="break-label">Lunch</span>
+              <span className="break-val">{lunchBreak}</span>
+            </div>
+            <div className="break-item">
+              <span className="break-label">Other</span>
+              <span className="break-val">{otherBreak}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="no-break-text">No breaks taken yet.</div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Cards;
+export default DashboardPanel;
