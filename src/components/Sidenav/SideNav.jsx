@@ -6,6 +6,7 @@ const SideNav = ({ currentView, setCurrentView, setShowThemeModal }) => {
     { id: "time", label: "Time Tracker", icon: "⏱️" },
     { id: "confessions", label: "Confessions", icon: "🤫" },
     { id: "movies", label: "Movie Reviews", icon: "🍿" },
+    { id: "democracy", label: "Townhall", icon: "🏛️" },
     { id: "quiz", label: "Brain Break", icon: "🧠" },
   ];
 

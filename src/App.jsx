@@ -7,6 +7,7 @@ import SideNav from "./components/Sidenav/SideNav.jsx";
 import Confessions from "./components/Confessions/Confessions";
 import MovieReviews from "./components/MovieReview/MovieReviews.jsx";
 import NewQuiz from "./components/Quiz/NewQuiz.jsx";
+import Democracy from "./components/Democracy/Democracy";
 
 // Theme Configuration
 const THEME_DATES = {
@@ -45,6 +46,7 @@ const App = () => {
         if (e.key.toLowerCase() === "2") { e.preventDefault(); setCurrentView("confessions"); }
         if (e.key.toLowerCase() === "3") { e.preventDefault(); setCurrentView("movies"); }
         if (e.key.toLowerCase() === "4") { e.preventDefault(); setCurrentView("quiz"); }
+        if (e.key.toLowerCase() === "5") { e.preventDefault(); setCurrentView("democracy"); }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -97,6 +99,9 @@ const App = () => {
           )}
           {currentView === "quiz" && (
             <NewQuiz />
+          )}
+          {currentView === "democracy" && (
+            <Democracy />
           )}
         </div>
       </main>

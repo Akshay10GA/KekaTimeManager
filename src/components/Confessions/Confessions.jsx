@@ -6,6 +6,106 @@ const STORAGE_KEY_HIDDEN = "keka_sys_pref_log_v2";
 const STORAGE_KEY_USER_ID = "keka_confession_user_id";
 const EMOJIS = ['❤️', '🔥', '😂', '💀', '😅', '🥲', '😘', '😡', '😱', '🤡', '👍', '👎', '🍌', '🍆', '🍑'];
 
+// ==========================================
+// OUTSOURCED SUBCOMPONENTS (Prevents Remount Bugs)
+// ==========================================
+const ReactionPicker = ({ targetId, type, activeReactionTarget, handleReactionClick }) => {
+  if (activeReactionTarget.id !== targetId || activeReactionTarget.type !== type) return null;
+  return (
+    <div className="reaction-picker-panel">
+      {EMOJIS.map(emoji => (
+        <button key={emoji} className="emoji-btn" onClick={(e) => { e.stopPropagation(); handleReactionClick(emoji); }}>
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const ReplyInputForm = ({ confessionId, parentId = null, onCancel = null, handleCommentSubmit }) => {
+  const [text, setText] = useState("");
+  const [gif, setGif] = useState("");
+  const [showGif, setShowGif] = useState(false);
+
+  return (
+    <div className="reply-form-container mt-2 mb-3">
+      <div className="inline-reply-box">
+        <span className="prompt-symbol purple-text">{">"}</span>
+        <input type="text" value={text} onChange={e=>setText(e.target.value)} placeholder="Type a reply..." className="terminal-input" />
+        <button className="action-text-btn" onClick={() => setShowGif(!showGif)}>+GIF</button>
+      </div>
+      {showGif && (
+        <div className="inline-reply-box mt-2">
+          <span className="prompt-symbol purple-text">URL</span>
+          <input type="text" value={gif} onChange={e=>setGif(e.target.value)} placeholder="Paste GIF link here..." className="terminal-input" />
+        </div>
+      )}
+      <div className="mt-2 text-right">
+        {onCancel && <button className="action-text-btn mr-3" onClick={onCancel}>CANCEL</button>}
+        <button className="execute-btn purple-btn" onClick={() => { handleCommentSubmit(text, gif, confessionId, parentId); setText(""); setGif(""); setShowGif(false); if(onCancel) onCancel(); }} disabled={!text && !gif}>
+          SEND REPLY
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CommentThread = ({ 
+  comment, confessionId, replyReactions, handleReactionClick, 
+  activeReactionTarget, setActiveReactionTarget, isAdmin, 
+  currentUser, handleDelete, handleCommentSubmit 
+}) => {
+  const [replying, setReplying] = useState(false);
+  const myReactions = replyReactions[comment.id] || { counts: {}, userReaction: null };
+
+  return (
+    <div className="comment-item">
+      <div className="comment-header">
+        <img src={comment.avatar_url} alt="avatar" className="comment-avatar" />
+        <span className="comment-author">{comment.full_name}</span>
+        <span className="comment-time">{new Date(comment.created_at).toLocaleTimeString()}</span>
+      </div>
+      <div className="comment-body">{comment.text}</div>
+      {comment.gif_url && <img src={comment.gif_url} alt="GIF" className="comment-media" />}
+      
+      <div className="reaction-bar">
+        <div className="reaction-group">
+          {Object.entries(myReactions.counts).map(([emoji, count]) => (
+            <button key={emoji} className={`reaction-chip ${myReactions.userReaction === emoji ? 'active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); handleReactionClick(emoji, true, { id: comment.id, type: 'reply' }); }}>
+              {emoji} {count}
+            </button>
+          ))}
+          <div className="relative-container">
+            <button className="add-reaction-btn" onClick={() => setActiveReactionTarget({ id: comment.id, type: 'reply' })}>+</button>
+            <ReactionPicker targetId={comment.id} type="reply" activeReactionTarget={activeReactionTarget} handleReactionClick={handleReactionClick} />
+          </div>
+        </div>
+        
+        <div>
+          <button className="action-text-btn mr-3" onClick={() => setReplying(!replying)}>REPLY</button>
+          {(isAdmin || currentUser.userId === comment.user_id) && (
+            <button className="action-text-btn alert-text" onClick={() => handleDelete(comment.id, 'reply')}>DEL</button>
+          )}
+        </div>
+      </div>
+
+      {replying && <ReplyInputForm confessionId={confessionId} parentId={comment.id} onCancel={() => setReplying(false)} handleCommentSubmit={handleCommentSubmit} />}
+
+      {comment.replies?.length > 0 && (
+        <div className="nested-comments">
+          {comment.replies.map(reply => (
+            <CommentThread key={reply.id} comment={reply} confessionId={confessionId} replyReactions={replyReactions} handleReactionClick={handleReactionClick} activeReactionTarget={activeReactionTarget} setActiveReactionTarget={setActiveReactionTarget} isAdmin={isAdmin} currentUser={currentUser} handleDelete={handleDelete} handleCommentSubmit={handleCommentSubmit} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 const Confessions = () => {
   const [confession, setConfession] = useState("");
   const [messages, setMessages] = useState([]);
@@ -195,43 +295,71 @@ const Confessions = () => {
       if (!error) setMessages(prev => prev.filter(m => m.id !== id));
     } else {
       await supabase.from("confession_replies").delete().eq("id", id);
-      // Optional: Refetch parent comments here if needed
     }
   };
 
   const handleReactionClick = async (emoji, isDirectClick = false, overrideTarget = null) => {
-    const target = isDirectClick ? overrideTarget : activeReactionTarget;
-    if(!isDirectClick) setActiveReactionTarget({ id: null, type: null });
-
-    if (!target.id) return;
+    // 1. Capture the exact target synchronously
+    const target = isDirectClick ? overrideTarget : { ...activeReactionTarget };
+    
+    if (!target || !target.id) return;
+    
+    // 2. Clear the picker UI immediately
+    if (!isDirectClick) setActiveReactionTarget({ id: null, type: null });
 
     const isConfession = target.type === 'confession';
-    const stateObj = isConfession ? reactions : replyReactions;
-    const setStateFn = isConfession ? setReactions : setReplyReactions;
     const tableName = isConfession ? "confession_reactions" : "confession_reply_reactions";
     const idField = isConfession ? "confession_id" : "reply_id";
+    const setStateFn = isConfession ? setReactions : setReplyReactions;
 
-    const currentData = stateObj[target.id] || { counts: {}, userReaction: null };
-    const isRemoving = currentData.userReaction === emoji;
-    const newReaction = isRemoving ? null : emoji;
+    let dbAction = null; 
 
+    // 3. Functional state update (100% immune to stale closures)
     setStateFn(prev => {
-      const newState = { ...prev };
-      const msgState = { ...(newState[target.id] || { counts: {} }), counts: { ...((newState[target.id] || {}).counts || {}) } };
-      if (currentData.userReaction) {
-        msgState.counts[currentData.userReaction] = Math.max(0, (msgState.counts[currentData.userReaction] || 0) - 1);
-        if (msgState.counts[currentData.userReaction] === 0) delete msgState.counts[currentData.userReaction];
+      const safePrev = prev || {};
+      const prevMsgData = safePrev[target.id] || { counts: {}, userReaction: null };
+      
+      const isRemoving = prevMsgData.userReaction === emoji;
+      const newReaction = isRemoving ? null : emoji;
+
+      // Ensure DB action uses the mathematically correct UI state
+      dbAction = { isRemoving, id: target.id };
+
+      const newCounts = { ...(prevMsgData.counts || {}) };
+
+      if (prevMsgData.userReaction) {
+        newCounts[prevMsgData.userReaction] = Math.max(0, (newCounts[prevMsgData.userReaction] || 0) - 1);
+        if (newCounts[prevMsgData.userReaction] === 0) {
+          delete newCounts[prevMsgData.userReaction];
+        }
       }
-      if (newReaction) msgState.counts[newReaction] = (msgState.counts[newReaction] || 0) + 1;
-      msgState.userReaction = newReaction;
-      newState[target.id] = msgState;
-      return newState;
+
+      if (newReaction) {
+        newCounts[newReaction] = (newCounts[newReaction] || 0) + 1;
+      }
+
+      return {
+        ...safePrev,
+        [target.id]: {
+          counts: newCounts,
+          userReaction: newReaction
+        }
+      };
     });
 
-    try {
-      if (isRemoving) await supabase.from(tableName).delete().match({ [idField]: target.id, user_id: userId });
-      else await supabase.from(tableName).upsert({ [idField]: target.id, user_id: userId, reaction: emoji });
-    } catch (err) { console.error(err); }
+    // 4. Sync with DB outside the state cycle via timeout microtask
+    setTimeout(async () => {
+      if (!dbAction) return;
+      try {
+        if (dbAction.isRemoving) {
+          await supabase.from(tableName).delete().match({ [idField]: dbAction.id, user_id: userId });
+        } else {
+          await supabase.from(tableName).upsert({ [idField]: dbAction.id, user_id: userId, reaction: emoji });
+        }
+      } catch (err) {
+        console.error("Reaction Sync Error:", err);
+      }
+    }, 0);
   };
 
   const handleCommentSubmit = async (text, gifUrl, confessionId, parentId = null) => {
@@ -245,98 +373,8 @@ const Confessions = () => {
     if (!parentId) setReplyCounts(prev => ({ ...prev, [confessionId]: (prev[confessionId] || 0) + 1 }));
   };
 
-  // --- SUBCOMPONENTS ---
-  const ReactionPicker = ({ targetId, type }) => {
-    if (activeReactionTarget.id !== targetId || activeReactionTarget.type !== type) return null;
-    return (
-      <div className="reaction-picker-panel">
-        {EMOJIS.map(emoji => (
-          <button key={emoji} className="emoji-btn" onClick={(e) => { e.stopPropagation(); handleReactionClick(emoji); }}>
-            {emoji}
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  const ReplyInputForm = ({ confessionId, parentId = null, onCancel = null }) => {
-    const [text, setText] = useState("");
-    const [gif, setGif] = useState("");
-    const [showGif, setShowGif] = useState(false);
-
-    return (
-      <div className="reply-form-container mt-2 mb-3">
-        <div className="inline-reply-box">
-          <span className="prompt-symbol purple-text">{">"}</span>
-          <input type="text" value={text} onChange={e=>setText(e.target.value)} placeholder="Type a reply..." className="terminal-input" />
-          <button className="action-text-btn" onClick={() => setShowGif(!showGif)}>+GIF</button>
-        </div>
-        {showGif && (
-          <div className="inline-reply-box mt-2">
-            <span className="prompt-symbol purple-text">URL</span>
-            <input type="text" value={gif} onChange={e=>setGif(e.target.value)} placeholder="Paste GIF link here..." className="terminal-input" />
-          </div>
-        )}
-        <div className="mt-2 text-right">
-          {onCancel && <button className="action-text-btn mr-3" onClick={onCancel}>CANCEL</button>}
-          <button className="execute-btn purple-btn" onClick={() => { handleCommentSubmit(text, gif, confessionId, parentId); setText(""); setGif(""); setShowGif(false); if(onCancel) onCancel(); }} disabled={!text && !gif}>
-            SEND REPLY
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const CommentThread = ({ comment, confessionId }) => {
-    const [replying, setReplying] = useState(false);
-    const myReactions = replyReactions[comment.id] || { counts: {}, userReaction: null };
-
-    return (
-      <div className="comment-item">
-        <div className="comment-header">
-          <img src={comment.avatar_url} alt="avatar" className="comment-avatar" />
-          <span className="comment-author">{comment.full_name}</span>
-          <span className="comment-time">{new Date(comment.created_at).toLocaleTimeString()}</span>
-        </div>
-        <div className="comment-body">{comment.text}</div>
-        {comment.gif_url && <img src={comment.gif_url} alt="GIF" className="comment-media" />}
-        
-        <div className="reaction-bar">
-          <div className="reaction-group">
-            {Object.entries(myReactions.counts).map(([emoji, count]) => (
-              <button key={emoji} className={`reaction-chip ${myReactions.userReaction === emoji ? 'active' : ''}`}
-                onClick={(e) => { e.stopPropagation(); handleReactionClick(emoji, true, { id: comment.id, type: 'reply' }); }}>
-                {emoji} {count}
-              </button>
-            ))}
-            <div className="relative-container">
-              <button className="add-reaction-btn" onClick={() => setActiveReactionTarget({ id: comment.id, type: 'reply' })}>+</button>
-              <ReactionPicker targetId={comment.id} type="reply" />
-            </div>
-          </div>
-          
-          <div>
-            <button className="action-text-btn mr-3" onClick={() => setReplying(!replying)}>REPLY</button>
-            {(isAdmin || currentUser.userId === comment.user_id) && (
-              <button className="action-text-btn alert-text" onClick={() => handleDelete(comment.id, 'reply')}>DEL</button>
-            )}
-          </div>
-        </div>
-
-        {replying && <ReplyInputForm confessionId={confessionId} parentId={comment.id} onCancel={() => setReplying(false)} />}
-
-        {comment.replies?.length > 0 && (
-          <div className="nested-comments">
-            {comment.replies.map(reply => <CommentThread key={reply.id} comment={reply} confessionId={confessionId} />)}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
-      {/* Invisible Click-Outside Backdrop for Emoji Picker */}
       {activeReactionTarget.id && (
         <div className="reaction-backdrop" onClick={() => setActiveReactionTarget({ id: null, type: null })}></div>
       )}
@@ -344,7 +382,6 @@ const Confessions = () => {
       <div className="confessions-wrapper terminal-wrapper full-width-override">
         <div className="confessions-grid">
           
-          {/* LEFT COLUMN: Input Terminal */}
           <div className="widget confessions-input-widget">
             <div className="widget-header purple-header flex-between">
               <span>SECURE CHANNEL // NEW CONFESSION</span>
@@ -398,7 +435,6 @@ const Confessions = () => {
             )}
           </div>
 
-          {/* RIGHT COLUMN: Live Feed */}
           <div className="widget confessions-feed-widget">
             <div className="widget-header purple-header">LIVE FEED // DECRYPTED MESSAGES</div>
             
@@ -432,7 +468,7 @@ const Confessions = () => {
                         ))}
                         <div className="relative-container">
                           <button className="add-reaction-btn" onClick={() => setActiveReactionTarget({ id: msg.id, type: 'confession' })}>+</button>
-                          <ReactionPicker targetId={msg.id} type="confession" />
+                          <ReactionPicker targetId={msg.id} type="confession" activeReactionTarget={activeReactionTarget} handleReactionClick={handleReactionClick} />
                         </div>
                       </div>
                       
@@ -443,10 +479,12 @@ const Confessions = () => {
 
                     {isCommentsOpen && (
                       <div className="comments-section mt-3">
-                        <ReplyInputForm confessionId={msg.id} />
+                        <ReplyInputForm confessionId={msg.id} handleCommentSubmit={handleCommentSubmit} />
                         <div className="comments-list">
                           {nestedComments.length === 0 ? <div className="terminal-log text-center">[NO REPLIES YET]</div> :
-                            nestedComments.map(comment => <CommentThread key={comment.id} comment={comment} confessionId={msg.id} />)
+                            nestedComments.map(comment => (
+                              <CommentThread key={comment.id} comment={comment} confessionId={msg.id} replyReactions={replyReactions} handleReactionClick={handleReactionClick} activeReactionTarget={activeReactionTarget} setActiveReactionTarget={setActiveReactionTarget} isAdmin={isAdmin} currentUser={currentUser} handleDelete={handleDelete} handleCommentSubmit={handleCommentSubmit} />
+                            ))
                           }
                         </div>
                       </div>

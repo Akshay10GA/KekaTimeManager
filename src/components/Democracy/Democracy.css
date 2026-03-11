@@ -1,0 +1,131 @@
+.townhall-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  border-bottom: 1px dashed var(--border-color);
+  background: var(--bg-dark);
+}
+
+.townhall-content {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.input-box {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.option-input {
+  width: 95%;
+  margin-left: auto;
+  display: block;
+}
+
+.townhall-card {
+  background: rgba(20, 20, 25, 0.9);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.card-title {
+  color: var(--accent-purple);
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-family: monospace;
+}
+
+/* Poll Styles */
+.poll-bar-container {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.poll-bar-container:hover {
+  border-color: var(--accent-purple);
+}
+
+.poll-bar-container.voted {
+  border-color: var(--accent-purple);
+  background: rgba(187, 134, 252, 0.1);
+}
+
+.poll-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(187, 134, 252, 0.2);
+  z-index: 1;
+  transition: width 0.4s ease;
+}
+
+.poll-label {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  font-family: monospace;
+  pointer-events: none;
+}
+
+/* Plans Styles */
+.onboard-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.member-badge {
+  background: rgba(187, 134, 252, 0.2);
+  color: var(--accent-purple);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(187, 134, 252, 0.4);
+}
+
+/* Opinions Styles */
+.vote-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 40px;
+}
+
+.vote-arrow {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.vote-arrow:hover { color: white; }
+.vote-arrow.active-up { color: #4caf50; }
+.vote-arrow.active-down { color: #f44336; }
+
+.vote-score {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+
+.text-green { color: #4caf50; }
+.flex-grow { flex-grow: 1; }
